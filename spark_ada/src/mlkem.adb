@@ -331,7 +331,7 @@ is
    subtype Poly_UDU_Bytes is Byte_Seq (Index_Poly_UDU_Bytes);
    subtype Poly_Zq_Vector_Bytes is Byte_Seq (Index_Poly_Zq_Vector_Bytes);
 
-   --  Array of bits, bit each bit stored as a Byte, so
+   --  Array of bits, with each bit stored as a Byte, so
    --  ineffecient in terms of space
    type Bit_Seq is array (N32 range <>) of U8_Bit;
 
