@@ -190,4 +190,53 @@ private
       pragma Unreferenced ("rem");
    end Zq;
 
+   --  Our lemmas for the SPARK proof
+
+   -- Prove a number is prime
+
+   function Is_Prime (N : Positive) return Boolean is
+   (for all J in Positive range 2 .. N - 1 => N mod J /= 0);
+
+   procedure Number_Is_Prime (N : BigInteger)
+   with
+      Ghost,
+      Global => null,
+      Post => Is_Prime(N);
+   
+
+
+   type Ext_cd is array (1 .. 3) of BigInteger;
+
+   function Lemma_extended_common_divisor
+      (A : BigInteger ;
+       B : BigInteger ) return Ext_cd
+   with
+      Ghost,
+      Global => null,
+      Post => (
+         for some U in BigInteger => (
+            for some V in BigInteger => (
+               for some D in BigInteger => (
+                  A * U + B * V = D and
+                  A mod D = 0 and
+                  B mod D = 0
+               )
+            )
+         )
+      ) ;
+
+   function Lemma_prime_divides_product
+      (A : BigInteger ;
+      B : BigInteger ;
+      P : BigInteger )
+   return Boolean with
+      Ghost,
+      Global=>null,
+      Pre=>
+         Is_Prime(P) and
+         (A * B) mod P = 0,
+      Post =>
+         A mod P = 0 or 
+         B mod P = 0;
+
 end MLKEM;

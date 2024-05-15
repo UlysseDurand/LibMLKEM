@@ -4,6 +4,10 @@
 with SHA3;  use SHA3;
 with SHAKE; use SHAKE;
 
+with SPARK.Cut_Operations; use SPARK.Cut_Operations;
+with SPARK.Big_Integers; use SPARK.Big_Integers;
+
+
 package body MLKEM
   with SPARK_Mode => On
 is
@@ -151,6 +155,7 @@ is
          R1 := TA * TB;
 
          pragma Assert (((R1 / Q) * Q) <= R1); --  L1
+
 
          --  Here, it ought to be possible to prove that
          --    (((R1 / Q) * Q) /= R1) if A /= 0 and B /= 0
@@ -2062,3 +2067,4 @@ is
    end MLKEM_Decaps;
 
 end MLKEM;
+

@@ -312,6 +312,19 @@ cd spark_ada/libkeccak
 alr build
 ```
 
+## Initial configuration of SPARKLib 
+
+First, locate your SPARK installation in which SPARKlib is supposed to be.
+
+For example, I found it in `gnatprove_13.2.1_28fc3583/lib/gnat/sparklib.gpr`.
+
+Change `spark_ada/sparklibbis.gpr`'s first line with the right location.
+
+Before building LibMLKEM, do
+```
+export SPARKLIB_OBJECT_DIR="sparklibobj"
+```
+
 ### Build LibMLKEM
 
 ```
