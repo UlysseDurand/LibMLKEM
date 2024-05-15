@@ -1,6 +1,8 @@
 --  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 --  SPDX-License-Identifier: Apache-2.0
 
+with SPARK.Big_Integers; use SPARK.Big_Integers;
+
 with Interfaces; use Interfaces;
 package MLKEM
   with SPARK_Mode => On
@@ -194,10 +196,10 @@ private
 
    -- Prove a number is prime
 
-   function Is_Prime (N : Positive) return Boolean is
-   (for all J in Positive range 2 .. N - 1 => N mod J /= 0);
+   function Is_Prime (N : Big_Integer) return Boolean is
+   (for all J in Big_Integer => (if 1<J and J<N then ( N mod J /= 0)));
 
-   procedure Number_Is_Prime (N : BigInteger)
+   procedure Number_Is_Prime (N : Big_Integer)
    with
       Ghost,
       Global => null,
@@ -205,18 +207,18 @@ private
    
 
 
-   type Ext_cd is array (1 .. 3) of BigInteger;
+   type Ext_cd is array (1 .. 3) of Big_Integer;
 
    function Lemma_extended_common_divisor
-      (A : BigInteger ;
-       B : BigInteger ) return Ext_cd
+      (A : Big_Integer ;
+       B : Big_Integer ) return Ext_cd
    with
       Ghost,
       Global => null,
       Post => (
-         for some U in BigInteger => (
-            for some V in BigInteger => (
-               for some D in BigInteger => (
+         for some U in Big_Integer => (
+            for some V in Big_Integer => (
+               for some D in Big_Integer => (
                   A * U + B * V = D and
                   A mod D = 0 and
                   B mod D = 0
@@ -226,9 +228,9 @@ private
       ) ;
 
    function Lemma_prime_divides_product
-      (A : BigInteger ;
-      B : BigInteger ;
-      P : BigInteger )
+      (A : Big_Integer ;
+      B : Big_Integer ;
+      P : Big_Integer )
    return Boolean with
       Ghost,
       Global=>null,
