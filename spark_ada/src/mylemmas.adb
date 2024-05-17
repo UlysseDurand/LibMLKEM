@@ -14,15 +14,7 @@ is
    function "*" (A : Sig ; B : Sig) return Sig is
    (if A = Nul or B = Nul then Nul elsif (A = Posi and B = Posi) or (A = Nega and B = Nega ) then Posi else Nega);
 
-   --  procedure Number_Is_Prime (N: Big_Natural) is
-   --  begin
-   --     null;
-   --  end Number_Is_Prime;
-
-   --  function obviousComp(A : Big_Integer; B : Big_Integer) return Boolean is
-   --  begin
-   --     return True;
-   --  end;
+   procedure Number_Is_Prime (N: Big_Natural) is null;
 
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer is 
    k : Big_Integer := A/B;

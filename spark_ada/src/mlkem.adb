@@ -163,35 +163,18 @@ is
 
          pragma Assert (((R1 / Q) * Q) <= R1); --  L1
 
-
-         --  Here, it ought to be possible to prove that
-         --    (((R1 / Q) * Q) /= R1) if A /= 0 and B /= 0
-         --  since Q is prime.  If (((Left * Right) / Q) * Q) = R1, then
-         --  either Left = Q or Right = Q, but that can't be possible
-         --  since we know that both Left and Right are < Q.
-         --
-         --  The SMT solvers can't get that, since they have no built-in
-         --  understanding of the primes, but TWO proofs of this propertyy
-         --  have been established.
-         --    1. In Lean4, courtesy of Leo DeMoura and Kevin Buzzard.
-         --    2. In HOL-Lite, thanks to John Harrison
-         --  See the file zq_multiply_proof.txt
-         --
-         --  For SPARK, we "Assume" rather than "Assert" this property...
-         --  pragma Assume ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
-
-         --  We will try to Assert this property
          BigTA := I32_To_Big_Integer(TA);
          BigTB := I32_To_Big_Integer(TB);
          BigQ := I32_To_Big_Integer(Q);
 
-         pragma Assert (Is_Prime(BigQ));
+         --  === We prove L2 ===
+         Number_Is_Prime(BigQ);
 
          pragma Assert ( By( 
             (if BigTA * BigTB mod BigQ = 0 and Is_Prime(BigQ) then (
                BigTA mod BigQ = 0  or BigTB mod BigQ = 0
             )),
-            Lemma_prime_divides_product(BigTA, BigTB, BigQ)
+            (if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product(BigTA, BigTB, BigQ)))
          ) );
 
          pragma Assert ( 
@@ -203,6 +186,10 @@ is
          pragma Assert ((if BigTA /= 0 and BigTB /= 0 then (
             (BigTA * BigTB / BigQ) * BigQ /= BigTA * BigTB
          )));
+
+         -- ======
+
+         pragma Assume ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
 
          --  L1 and L2 combine to conclude
          pragma Assert ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) < R1)));

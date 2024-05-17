@@ -21,6 +21,12 @@ is
       for all J in Interval'(2,N) => ( N mod J /= 0)
    ));
 
+   procedure Number_Is_Prime (N : Big_Natural) with
+      Ghost,
+      Global => Null,
+      Post => Is_Prime(N);
+
+
    --  === Correspondance between definitions of one number divides another ===
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer with
       Ghost,
