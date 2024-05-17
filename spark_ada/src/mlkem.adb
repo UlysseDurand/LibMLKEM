@@ -4,6 +4,8 @@
 with SHA3;  use SHA3;
 with SHAKE; use SHAKE;
 
+with SPARK.Cut_Operations; use SPARK.Cut_Operations;
+with SPARK.Big_Integers; use SPARK.Big_Integers;
 with MyLemmas; use MyLemmas;
 
 package body MLKEM
@@ -122,6 +124,10 @@ is
          return T (R);
       end "-";
 
+      function T_To_Big_Integer (A : T) return Big_Integer is (To_Big_Integer(Integer(A))); 
+
+      function I32_To_Big_Integer (A : I32) return Big_Integer is (To_Big_Integer(Integer(A))); 
+
       function "*" (Left, Right : in T) return T
       is
          subtype Zq_Product is I32 range 0 .. ((Q - 1) ** 2);
@@ -130,6 +136,7 @@ is
          R2     : I64;
 
          TA, TB, R, R3, R4 : I32;
+         BigTA, BigTB, BigQ : Big_Integer;
       begin
          --  This implementation computes (Left * Right) mod Q
          --  using the Barrett/Montgomery reduction trick (See PLDI '94 for
@@ -171,7 +178,31 @@ is
          --  See the file zq_multiply_proof.txt
          --
          --  For SPARK, we "Assume" rather than "Assert" this property...
-         pragma Assume ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
+         --  pragma Assume ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
+
+         --  We will try to Assert this property
+         BigTA := I32_To_Big_Integer(TA);
+         BigTB := I32_To_Big_Integer(TB);
+         BigQ := I32_To_Big_Integer(Q);
+
+         pragma Assert (Is_Prime(BigQ));
+
+         pragma Assert ( By( 
+            (if BigTA * BigTB mod BigQ = 0 and Is_Prime(BigQ) then (
+               BigTA mod BigQ = 0  or BigTB mod BigQ = 0
+            )),
+            Lemma_prime_divides_product(BigTA, BigTB, BigQ)
+         ) );
+
+         pragma Assert ( 
+            if BigTA /= 0 and BigTB /= 0 then (
+               BigTA * BigTB mod BigQ /= 0
+            )
+         );
+
+         pragma Assert ((if BigTA /= 0 and BigTB /= 0 then (
+            (BigTA * BigTB / BigQ) * BigQ /= BigTA * BigTB
+         )));
 
          --  L1 and L2 combine to conclude
          pragma Assert ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) < R1)));

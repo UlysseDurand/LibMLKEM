@@ -14,24 +14,15 @@ is
    function "*" (A : Sig ; B : Sig) return Sig is
    (if A = Nul or B = Nul then Nul elsif (A = Posi and B = Posi) or (A = Nega and B = Nega ) then Posi else Nega);
 
-   --  function givesBigInterval (A : Big_Integer ; B : Big_Integer) return Interval is
-   --  begin
-   --     if A < B then 
-   --        return (A,B); 
-   --     else 
-   --        return (B,A); 
-   --     end if;
-   --  end;
-
    --  procedure Number_Is_Prime (N: Big_Natural) is
    --  begin
    --     null;
    --  end Number_Is_Prime;
 
-   function obviousComp(A : Big_Integer; B : Big_Integer) return Boolean is
-   begin
-      return True;
-   end;
+   --  function obviousComp(A : Big_Integer; B : Big_Integer) return Boolean is
+   --  begin
+   --     return True;
+   --  end;
 
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer is 
    k : Big_Integer := A/B;
@@ -80,18 +71,17 @@ is
 
       Interv := (- abs (C+D), abs (C+D));
 
-      pragma Assert (if (k1 >= 0 and k2 >= 0) or (k1 <= 0 and k2 <= 0) then (In_Range(Interv, k1 + k2)));
+      --  pragma Assert (sign(k1) = sign(C) * sign(B));
+      --  pragma Assert (sign(k2) = sign(D) * sign(B));
 
-      pragma Assert (By( (if (C >= 0 and B >= 0) or (C <= 0 and B <= 0) then k1 >= 0), k1 = CorrespDividOne(C, B)));
-      pragma Assert (By( (if (C >= 0 and B <= 0) or (C <= 0 and B >= 0) then k1 <= 0), k1 = CorrespDividOne(C, B)));
-      pragma Assert (By( (if (D >= 0 and B >= 0) or (D <= 0 and B <= 0) then k2 >= 0), k2 = CorrespDividOne(D, B)));
-      pragma Assert (By( (if (D >= 0 and B <= 0) or (D <= 0 and B >= 0) then k2 <= 0), k2 = CorrespDividOne(D, B)));
+      --  pragma Assert (if sign(k1) = sign(k2) then (In_Range(Interv, k1 + k2)));
 
-      pragma Assert (if (k1 >= 0 and k2 <= 0) then (In_Range(Interv, k1 + k2)));
+
+      --  pragma Assert (if sign(k1) = Posi and sign(k2) = Nega then (In_Range(Interv, k1 + k2)));
       pragma Assert (In_Range(Interv, k1+k2));
       pragma Assert (B * (k1 + k2) = C + D);
       pragma Assert (for some k in Interv => (C + D = k * B));
-      --  pragma Assert (By(CorrespDividTwo(C + D, B), k = k1+k2));
+      pragma Assert (CorrespDividTwo(C + D, B));
       return True;
    end; 
 
@@ -117,9 +107,9 @@ is
          V := LilGcd.U - M * LilGcd.V;
          D := LilGcd.D;
 
-         pragma Assume (B * M mod D = 0);
+         pragma Assert (By (B * M mod D = 0, goodDivideMult(B, D, M) ));
 
-         pragma Assume (A mod D = 0);
+         pragma Assert (By (A mod D = 0, goodDivideAdd(D, B * M, R)) );
          pragma Assert (B mod D = 0);
          pragma Assert (A * U + B * V = D);
          Res := (U,V,D);
@@ -127,8 +117,8 @@ is
       return Res;
    end;
 
-   --  function Lemma_prime_divides_product (A : Big_Natural; B : Big_Natural; P : Big_Natural) return Boolean is
-   --  begin
-   --     return True;
-   --  end;
+   function Lemma_prime_divides_product (A : Big_Natural; B : Big_Natural; P : Big_Natural) return Boolean is
+   begin
+      return True;
+   end;
 end MyLemmas;
