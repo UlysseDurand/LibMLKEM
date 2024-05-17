@@ -21,10 +21,10 @@ is
       for all J in Interval'(2,N) => ( N mod J /= 0)
    ));
 
-   procedure Number_Is_Prime (N : Big_Natural) with
-      Ghost,
-      Global => Null,
-      Post => Is_Prime(N);
+   --  procedure Number_Is_Prime (N : Big_Natural) with
+   --     Ghost,
+   --     Global => Null,
+   --     Post => Is_Prime(N);
 
 
    --  === Correspondance between definitions of one number divides another ===
