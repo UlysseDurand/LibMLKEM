@@ -325,6 +325,8 @@ Before building LibMLKEM, do
 export SPARKLIB_OBJECT_DIR="sparklibobj"
 ```
 
+(I added a Makefile so `make compile` and `make prove` will do for you the `Build LibMLKEM` part and the `Reproducing the proofs` parts)
+
 ### Build LibMLKEM
 
 ```

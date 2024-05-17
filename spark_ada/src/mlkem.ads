@@ -5,7 +5,6 @@ with Interfaces; use Interfaces;
 package MLKEM
   with SPARK_Mode => On
 is
-
    --==============================================
    --  Exported constants, types, and subprograms
    --
@@ -137,8 +136,8 @@ private
    package Zq
      with SPARK_Mode => On
    is
-      --  In theory, Zq could fit in 12 bits, but we force compiler to
-      --  represent it in 16 bits for natural convenience and efficiency
+      --  In theory, Zq could fit in 12 bits, but force compiler
+      --  to represent in 16 bits for natural convenience and efficiency
       type T is mod Q
         with Object_Size => 16;
 

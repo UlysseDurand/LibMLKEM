@@ -189,7 +189,7 @@ is
 
          -- ======
 
-         pragma Assume ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
+         pragma Assert ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
 
          --  L1 and L2 combine to conclude
          pragma Assert ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) < R1)));
