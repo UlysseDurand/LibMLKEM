@@ -28,6 +28,10 @@ is
 
 
    --  === Correspondance between definitions of one number divides another ===
+   --  Indeed, B divides A if and only if A mod B = 0 if and only if exists k such that A = k*B
+
+   --  As we can only use `for some` on bounded values, we add the fact that k is between - abs A and abs A 
+
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer with
       Ghost,
       Pre => B /= 0 and then (A mod B = 0),
@@ -45,17 +49,16 @@ is
 
    -- === Properties of divisibility ===
    --  if B divides A then B divides A * M
-   function goodDivideMult(A : Big_Integer; B : Big_Integer; M : Big_Integer) return Boolean with
+   function DivideMult(A : Big_Integer; B : Big_Integer; M : Big_Integer) return Boolean with
       Ghost,
       Pre => B /= 0 and then(A mod B = 0),
-      Post => goodDivideMult'Result and A * M mod B = 0;
+      Post => DivideMult'Result and A * M mod B = 0;
 
    -- if B divides C and B divides D then B divides C + D
-   function goodDivideAdd(B: Big_Integer; C: Big_Integer; D: Big_Integer) return Boolean with
+   function DivideAdd(B: Big_Integer; C: Big_Integer; D: Big_Integer) return Boolean with
       Ghost,
       Pre => B /= 0 and then(C mod B = 0 and D mod B =0),
-      Post => goodDivideAdd'Result and (C + D) mod B = 0;
-
+      Post => DivideAdd'Result and (C + D) mod B = 0;
    --  ======
 
 
@@ -66,11 +69,14 @@ is
       D : Big_Natural;
    end Record;
 
-   --  Always Return annotation is needed to make SPARK verify that this function terminates.
+   --  This is an implementation and proof of the Euclid algorithm
+   --  Still, we don't prove that the resulting `d` is the greatest of the common divisors 
    function ext_gcd (A : Big_Natural; B : Big_Natural) return Ext_cd
    with
       Ghost,
+      --  Always_Return annotation is needed to make SPARK verify that this function terminates.
       Annotate => (GNATprove, Always_Return),
+      --  We know the recurive function terminates because B in the subcall is strictly less than the initial B
       Subprogram_Variant => (Decreases => B),
       Pre => B /= 0,
       Post =>

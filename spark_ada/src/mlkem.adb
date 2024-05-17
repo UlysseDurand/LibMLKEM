@@ -163,30 +163,27 @@ is
 
          pragma Assert (((R1 / Q) * Q) <= R1); --  L1
 
+
+         --  === We prove L2 ===
+
+         --  We will use lemmas we've made on Big_Integers to prove L2
          BigTA := I32_To_Big_Integer(TA);
          BigTB := I32_To_Big_Integer(TB);
          BigQ := I32_To_Big_Integer(Q);
 
-         --  === We prove L2 ===
+         --  We need Q to be prime
          Number_Is_Prime(BigQ);
 
-         pragma Assert ( By( 
-            (if BigTA * BigTB mod BigQ = 0 and Is_Prime(BigQ) then (
-               BigTA mod BigQ = 0  or BigTB mod BigQ = 0
-            )),
-            (if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product(BigTA, BigTB, BigQ)))
-         ) );
-
+         --  We use the contraposition of the lemma MyLemmas.Lemma_prime_divides_product
          pragma Assert ( 
-            if BigTA /= 0 and BigTB /= 0 then (
-               BigTA * BigTB mod BigQ /= 0
-            )
+            (if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product(BigTA, BigTB, BigQ)))
          );
 
-         pragma Assert ((if BigTA /= 0 and BigTB /= 0 then (
-            (BigTA * BigTB / BigQ) * BigQ /= BigTA * BigTB
-         )));
+         --  Here it is
+         pragma Assert (if BigTA /= 0 and BigTB /= 0 then (BigTA * BigTB mod BigQ /= 0));
 
+         --  We have the Big_Integer version of L2 
+         pragma Assert ((if BigTA /= 0 and BigTB /= 0 then ((BigTA * BigTB / BigQ) * BigQ /= BigTA * BigTB)));
          -- ======
 
          pragma Assert ((if Left /= 0 and Right /= 0 then (((R1 / Q) * Q) /= R1))); -- L2
