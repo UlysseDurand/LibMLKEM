@@ -19,6 +19,7 @@ is
    --  Procedure that proves that a number is prime, from SPARK User's Guide - 7.9.3.2
    procedure Number_Is_Prime (N: Big_Natural) is null;
 
+
    --  If A mod B = 0 then there is k such that...
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer is 
    k : Big_Integer := A/B;
