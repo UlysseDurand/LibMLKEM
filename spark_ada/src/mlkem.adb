@@ -166,23 +166,21 @@ is
 
          --  === We prove L2 ===
 
-         --  We will use lemmas we've made on Big_Integers to prove L2
+         --  We will use lemmas we've proved on Big_Integers to prove L2
          BigTA := I32_To_Big_Integer(TA);
          BigTB := I32_To_Big_Integer(TB);
          BigQ := I32_To_Big_Integer(Q);
 
          --  We need Q to be prime
-         pragma Assert (Is_Prime(BigQ));
+         pragma Assert (Is_Prime (BigQ));
 
          --  We use the contraposition of the lemma MyLemmas.Lemma_prime_divides_product
-         pragma Assert ( 
-            (if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product(BigTA, BigTB, BigQ)))
-         );
+         pragma Assert ((if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product (BigTA, BigTB, BigQ))));
 
          --  Here it is
          pragma Assert (if BigTA /= 0 and BigTB /= 0 then (BigTA * BigTB mod BigQ /= 0));
 
-         --  We have the Big_Integer version of L2 
+         --  We get the Big_Integer version of L2 
          pragma Assert ((if BigTA /= 0 and BigTB /= 0 then ((BigTA * BigTB / BigQ) * BigQ /= BigTA * BigTB)));
          -- ======
 
@@ -1631,6 +1629,7 @@ is
          pragma Loop_Invariant (2**(I + 1) <= 128);
          pragma Loop_Invariant (I32 (K) = 2**(I + 1));
       end loop;
+      pragma Assert (I32 (K) = 128);
       pragma Assert (K = 128);
       return F_Hat; --  calls _memcpy()
    end NTT;

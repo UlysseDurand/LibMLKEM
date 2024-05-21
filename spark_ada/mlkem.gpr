@@ -169,12 +169,12 @@ library project MLKEM is
    end Binder;
 
    package Prove is
-      for Proof_Switches ("Ada") use ("--proof=per_path",
+      for Proof_Switches ("Ada") use (
                                       "-j8",
                                       "--no-global-generation",
                                       "--no-inlining",
                                       "--no-loop-unrolling",
-                                      "--level=1",
+                                      "--level=2",
                                       "--prover=z3,cvc5,altergo",
                                       "--timeout=4",
                                       "--memlimit=0",
