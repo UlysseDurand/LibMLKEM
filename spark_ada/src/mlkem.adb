@@ -124,7 +124,7 @@ is
          return T (R);
       end "-";
 
-      function I32_To_Big_Integer (A : I32) return Big_Integer is (To_Big_Integer(Integer(A))); 
+      function I32_To_Big_Integer (A : I32) return Big_Integer is (To_Big_Integer (Integer(A))); 
 
       function "*" (Left, Right : in T) return T
       is
@@ -172,8 +172,8 @@ is
          --  We need Q to be prime
          pragma Assert (Is_Prime (BigQ));
 
-         --  We use the contraposition of the lemma MyLemmas.Lemma_prime_divides_product
-         pragma Assert ((if BigTA * BigTB mod BigQ = 0 then (Lemma_prime_divides_product (BigTA, BigTB, BigQ))));
+         --  We use the contraposition of the lemma MyLemmas.Lemma_Prime_Divides_Product
+         pragma Assert ((if BigTA * BigTB mod BigQ = 0 then (Lemma_Prime_Divides_Product (BigTA, BigTB, BigQ))));
 
          --  Here it is
          pragma Assert (if BigTA /= 0 and BigTB /= 0 then (BigTA * BigTB mod BigQ /= 0));

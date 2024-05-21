@@ -18,17 +18,17 @@ is
    --  Test if a number is prime
    function Is_Prime (N : Big_Natural) return Boolean 
    is
-      (N > 1 and then (for all J in Interval' (2, N - 1) => (N mod J /= 0)));
+      (N > 1 and then (for all J in Interval'(2, N - 1) => (N mod J /= 0)));
 
    --  Here we give the lemmas to go from one definition to the other of one number divides another
-   --  Indeed, B divides A if and only if A mod B = 0 if and only if exists k such that A = k * B
-   --  As we can only use `for some` on bounded values, we add the fact that k is between - abs A and abs A 
+   --  Indeed, B divides A if and only if A mod B = 0 if and only if exists K such that A = K * B
+   --  As we can only use `for some` on bounded values, we add the fact that K is between - abs A and abs A 
    function Corresp_Divid_One (A : Big_Integer; 
                                B : Big_Integer) return Big_Integer 
       with Ghost,
            Pre => B /= 0 and then (A mod B = 0),
            Post =>  
-              In_Range  (Interval' (- abs A, abs A), Corresp_Divid_One'Result) and 
+              In_Range  (Interval'(- abs A, abs A), Corresp_Divid_One'Result) and 
               (A = Corresp_Divid_One'Result * B) and
               --  We add this postcondition on signs to help the proofs
               sign (Corresp_Divid_One'Result) = (sign (A) * sign (B));
@@ -36,7 +36,7 @@ is
    function Corresp_Divid_Two (A : Big_Integer;
                                B : Big_Integer) return Boolean 
       with Ghost,
-           Pre => B /= 0 and then (for some k in Interval' (- abs A, abs A) => (A = k * B)),
+           Pre => B /= 0 and then (for some K in Interval'(- abs A, abs A) => (A = K * B)),
            Post => Corresp_Divid_Two'Result and A mod B = 0;
   
 

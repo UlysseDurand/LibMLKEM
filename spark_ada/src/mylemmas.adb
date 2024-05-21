@@ -20,17 +20,17 @@ is
        elsif (A = Posi and B = Posi) or (A = Nega and B = Nega ) then Posi 
        else Nega);
 
-   --  If A mod B = 0 then there is k such that k * B = A. We add that k is between -  abs A and abs A
+   --  If A mod B = 0 then there is K such that K * B = A. We add that K is between -  abs A and abs A
    function Corresp_Divid_One (A : Big_Integer;
                                B : Big_Integer) return Big_Integer 
    is 
-      k : constant Big_Integer := A / B;
+      K : constant Big_Integer := A / B;
    begin 
-      pragma Assert (In_Range (Interval' (- (abs A), abs A), k));
-      pragma Assert (A = k * B);
-      pragma Assert (Sign (k) = Sign (A) * Sign (B));
-      return k;
-   end; 
+      pragma Assert (In_Range (Interval'(- (abs A), abs A), K));
+      pragma Assert (A = K * B);
+      pragma Assert (Sign (K) = Sign (A) * Sign (B));
+      return K;
+   end Corresp_Divid_One; 
 
    --  The other way
    function Corresp_Divid_Two (A : Big_Integer;
@@ -42,42 +42,42 @@ is
    function Divide_Mult (A : Big_Integer;
                          B : Big_Integer; 
                          M : Big_Integer) return Boolean is 
-      k1 : Big_Integer;
-      k2 : Big_Integer;
+      K1 : Big_Integer;
+      K2 : Big_Integer;
    begin
-      k1 := Corresp_Divid_One (A, B);
-      pragma Assert (for some k in Interval' (- abs A, abs A) => (k * B = A));
+      K1 := Corresp_Divid_One (A, B);
+      pragma Assert (for some K in Interval'(- abs A, abs A) => (K * B = A));
 
-      pragma Assert (In_Range (Interval' (- abs (A), abs (A)), k1));
-      k2 := k1 * M;
+      pragma Assert (In_Range (Interval'(- abs (A), abs (A)), K1));
+      K2 := K1 * M;
       --  Multiplication is monotonic
-      pragma Assert (In_Range (Interval' ( - abs (M * A), abs (M * A)), k2));
+      pragma Assert (In_Range (Interval'( - abs (M * A), abs (M * A)), K2));
 
-      pragma Assert (for some k in Interval' (- abs (M * A), abs (M * A) ) => k * B = M * A);
+      pragma Assert (for some K in Interval'(- abs (M * A), abs (M * A) ) => K * B = M * A);
       return True; 
-   end;
+   end Divide_Mult;
 
    --  If B divides C and B divides D then B divides C + D
    function Divide_Add (B : Big_Integer;
                         C : Big_Integer;
                         D : Big_Integer) return Boolean 
    is
-      k1 : Big_Integer;
-      k2 : Big_Integer; 
+      K1 : Big_Integer;
+      K2 : Big_Integer; 
       Interv : Interval;
    begin
-      k1 := Corresp_Divid_One (C, B);
-      k2 := Corresp_Divid_One (D, B);
+      K1 := Corresp_Divid_One (C, B);
+      K2 := Corresp_Divid_One (D, B);
 
       Interv := (- abs (C + D), abs (C + D));
-      --  k1 + k2 has to be in Interv
-      pragma Assert (In_Range (Interv, k1 + k2));
+      --  K1 + K2 has to be in Interv
+      pragma Assert (In_Range (Interv, K1 + K2));
 
-      pragma Assert (B * (k1 + k2) = C + D);
-      pragma Assert (for some k in Interv => (C + D = k * B));
+      pragma Assert (B * (K1 + K2) = C + D);
+      pragma Assert (for some K in Interv => (C + D = K * B));
       pragma Assert (Corresp_Divid_Two (C + D, B));
       return True;
-   end; 
+   end Divide_Add; 
 
    function Ext_gcd (A: Big_Natural;
                      B: Big_Natural) return Ext_cd 
@@ -121,7 +121,7 @@ is
          Res := (U, V, D);
       end if;
       return Res;
-   end;
+   end Ext_gcd;
 
 
    --  If P prime divides A * B then P divides A or P divides B
@@ -134,8 +134,8 @@ is
       V : Big_Integer;
       D : Big_Integer;
 
-      --  k * P = A * B
-      k : constant Big_Integer := Corresp_Divid_One (A * B, P);
+      --  K * P = A * B
+      K : constant Big_Integer := Corresp_Divid_One (A * B, P);
    begin
 
       --  The preconditions of the lemma
@@ -158,11 +158,11 @@ is
          --  Some rewriting...
          pragma Assert (A * U + P * V = 1 );
          pragma Assert (A * B * U + P * V * B = B);
-         pragma Assert (k * P * U + P * V * B = B);
+         pragma Assert (K * P * U + P * V * B = B);
 
          --  We prove the preconditions of CorrespDividTwo
-         pragma Assert (P * (k * U + V * B) = B);
-         pragma Assert (In_Range (Interval' (- abs B, abs B) , k * U + V * B ));
+         pragma Assert (P * (K * U + V * B) = B);
+         pragma Assert (In_Range (Interval'(- abs B, abs B) , K * U + V * B ));
 
          --  Now we know P divides P
          pragma Assert (Corresp_Divid_Two (B, P));
@@ -172,5 +172,5 @@ is
       --  We have our posticondition
       pragma Assert (A mod P = 0 or B mod P = 0);
       return True;
-   end;
+   end Lemma_Prime_Divides_Product;
 end MyLemmas;
