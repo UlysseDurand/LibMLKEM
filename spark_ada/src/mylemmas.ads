@@ -23,40 +23,43 @@ is
    --  Here we give the lemmas to go from one definition to the other of one number divides another
    --  Indeed, B divides A if and only if A mod B = 0 if and only if exists k such that A = k * B
    --  As we can only use `for some` on bounded values, we add the fact that k is between - abs A and abs A 
-   function CorrespDividOne (A : Big_Integer; 
-                             B : Big_Integer) return Big_Integer 
+   function Corresp_Divid_One (A : Big_Integer; 
+                               B : Big_Integer) return Big_Integer 
       with Ghost,
            Pre => B /= 0 and then (A mod B = 0),
            Post =>  
-              In_Range  (Interval' (- abs A, abs A), CorrespDividOne'Result) and 
-              (A = CorrespDividOne'Result * B) and
+              In_Range  (Interval' (- abs A, abs A), Corresp_Divid_One'Result) and 
+              (A = Corresp_Divid_One'Result * B) and
               --  We add this postcondition on signs to help the proofs
-              sign (CorrespDividOne'Result) = (sign (A) * sign (B));
+              sign (Corresp_Divid_One'Result) = (sign (A) * sign (B));
 
-   function CorrespDividTwo (A : Big_Integer;
-                             B : Big_Integer) return Boolean 
+   function Corresp_Divid_Two (A : Big_Integer;
+                               B : Big_Integer) return Boolean 
       with Ghost,
            Pre => B /= 0 and then (for some k in Interval' (- abs A, abs A) => (A = k * B)),
-           Post => CorrespDividTwo'Result and A mod B = 0;
+           Post => Corresp_Divid_Two'Result and A mod B = 0;
   
 
    --  Here are some properties about divisibility
    --  If B divides A then B divides A * M
-   function DivideMult (A : Big_Integer; B : Big_Integer; M : Big_Integer) return Boolean with
-      Ghost,
-      Pre => B /= 0 and then (A mod B = 0),
-      Post => DivideMult'Result and A * M mod B = 0;
+   function Divide_Mult (A : Big_Integer; 
+                         B : Big_Integer; 
+                         M : Big_Integer) return Boolean 
+      with Ghost,
+           Pre => B /= 0 and then (A mod B = 0),
+           Post => Divide_Mult'Result and A * M mod B = 0;
 
    --  If B divides C and B divides D then B divides C + D
-   function DivideAdd (B : Big_Integer; 
-                       C : Big_Integer; 
-                       D : Big_Integer) return Boolean 
+   function Divide_Add (B : Big_Integer; 
+                        C : Big_Integer; 
+                        D : Big_Integer) return Boolean 
       with Ghost,
            Pre => B /= 0 and then (C mod B = 0 and D mod B =0),
-           Post => DivideAdd'Result and (C + D) mod B = 0;
+           Post => Divide_Add'Result and (C + D) mod B = 0;
 
 
-   --  For A and B, there are U, V, D such that A * U + B * V = D and D divides A and D divides B ===
+   --  For A and B, there are U, V, D such that A * U + B * V = D and D divides A and D divides B 
+   --  Ext_cd stands for extanded common divisor
    type Ext_cd is record 
       U : Big_Integer;
       V : Big_Integer;
@@ -65,7 +68,7 @@ is
 
    --  This is an implementation and proof of the Euclid algorithm
    --  Still, we don't prove that the resulting D is the greatest of the common divisors 
-   function ext_gcd (A : Big_Natural ;
+   function Ext_gcd (A : Big_Natural;
                      B : Big_Natural) return Ext_cd
       with Ghost,
          --  Always_Return annotation is needed to make SPARK verify that this function terminates.
@@ -74,13 +77,13 @@ is
          Subprogram_Variant => (Decreases => B),
          Pre => B /= 0,
          Post =>
-            ext_gcd'Result.D > 0 and
-            A * ext_gcd'Result.U + B * ext_gcD'Result.V = ext_gcd'Result.D and
-            A mod ext_gcd'Result.D = 0 and
-            B mod ext_gcd'Result.D = 0;
+            Ext_gcd'Result.D > 0 and
+            A * Ext_gcd'Result.U + B * Ext_gcd'Result.V = Ext_gcd'Result.D and
+            A mod Ext_gcd'Result.D = 0 and
+            B mod Ext_gcd'Result.D = 0;
 
    --  If P prime divides A * B then either P divides A either it divides B
-   function Lemma_prime_divides_product (A : Big_Natural; 
+   function Lemma_Prime_Divides_Product (A : Big_Natural; 
                                          B : Big_Natural; 
                                          P : Big_Natural) return Boolean 
       with Ghost,
@@ -88,7 +91,7 @@ is
            Pre =>
               Is_Prime (P) and then ((A * B) mod P = 0),
            Post =>
-              Lemma_prime_divides_product'Result and
+              Lemma_Prime_Divides_Product'Result and
               (A mod P = 0 or B mod P = 0);
 
 end MyLemmas;

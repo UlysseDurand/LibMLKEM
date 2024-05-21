@@ -4,7 +4,7 @@
 with SHA3;  use SHA3;
 with SHAKE; use SHAKE;
 
-with SPARK.Cut_Operations; use SPARK.Cut_Operations;
+--  with SPARK.Cut_Operations; use SPARK.Cut_Operations;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 with MyLemmas; use MyLemmas;
 
@@ -123,8 +123,6 @@ is
 
          return T (R);
       end "-";
-
-      function T_To_Big_Integer (A : T) return Big_Integer is (To_Big_Integer(Integer(A))); 
 
       function I32_To_Big_Integer (A : I32) return Big_Integer is (To_Big_Integer(Integer(A))); 
 
