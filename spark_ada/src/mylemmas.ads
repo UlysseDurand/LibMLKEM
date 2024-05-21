@@ -1,4 +1,3 @@
-
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 with SPARK.Big_Intervals; use SPARK.Big_Intervals;
 package MyLemmas

@@ -107,8 +107,47 @@ is
       return Res;
    end;
 
+
+   --  if P prime divides A * B then P divides A or P divides B
    function Lemma_prime_divides_product (A : Big_Natural; B : Big_Natural; P : Big_Natural) return Boolean is
+
+   TheGcd : Ext_cd;
+   U : Big_Integer;
+   V : Big_Integer;
+   D : Big_Integer;
+
+   --  k * P = A * B
+   k : Big_Integer := CorrespDividOne(A * B, P);
    begin
+      pragma Assert (Is_Prime(P));
+      pragma Assert (
+         (A * B) mod P = 0
+      );
+
+      --  A * U + P * V = D, D divides A and D divides P
+      TheGcd := ext_gcd(A, P);
+      U := TheGcd.U;
+      V := TheGcd.V;
+      D := TheGcd.D;
+
+      --  We will show that if P doesn't divide A then it divides B
+
+      --  As P prime and D divides P then D = 1 or D = P
+      --  But if P doesn't divide A then D cannot be P so D = 1 
+      pragma Assert (if A mod P /= 0 then D = 1);
+
+      pragma Assert (if A mod P /= 0 then A * U + P * V = 1);
+      pragma Assert (if A mod P /= 0 then A * B * U + P * V * B = B);
+      pragma Assert (if A mod P /= 0 then k * P * U + P * V * B = B);
+      pragma Assert (if A mod P /= 0 then P * (k * U + V * B) = B);
+      pragma Assert (if A mod P /= 0 then In_Range( Interval'(-abs B, abs B) , k * U + V * B ));
+      pragma Assert (if A mod P /= 0 then CorrespDividTwo (B, P));
+      pragma Assert (if A mod P /= 0 then B mod P = 0);
+
+      Pragma Assert (
+         A mod P = 0 or 
+         B mod P = 0
+      );
       return True;
    end;
 end MyLemmas;
