@@ -172,7 +172,6 @@ is
          BigQ := I32_To_Big_Integer(Q);
 
          --  We need Q to be prime
-         Number_Is_Prime(BigQ);
          pragma Assert (Is_Prime(BigQ));
 
          --  We use the contraposition of the lemma MyLemmas.Lemma_prime_divides_product

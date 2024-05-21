@@ -1,4 +1,3 @@
-
 with SPARK.Cut_Operations; use SPARK.Cut_Operations;
 
 package body MyLemmas 
@@ -15,10 +14,6 @@ is
    --  Multiplication of two signs (the image of the multiplication on Big_Integers by the `sign` isomorphism)
    function "*" (A : Sig ; B : Sig) return Sig is
    (if A = Nul or B = Nul then Nul elsif (A = Posi and B = Posi) or (A = Nega and B = Nega ) then Posi else Nega);
-
-   --  Procedure that proves that a number is prime, from SPARK User's Guide - 7.9.3.2
-   procedure Number_Is_Prime (N: Big_Natural) is null;
-
 
    --  If A mod B = 0 then there is k such that...
    function CorrespDividOne(A : Big_Integer; B : Big_Integer) return Big_Integer is 
@@ -130,7 +125,7 @@ is
       V := TheGcd.V;
       D := TheGcd.D;
 
-      --  We will show that if P doesn't divide A then it divides B
+      --  === We will show that if P doesn't divide A then it divides B ===
 
       --  As P prime and D divides P then D = 1 or D = P
       --  But if P doesn't divide A then D cannot be P so D = 1 
@@ -139,10 +134,14 @@ is
       pragma Assert (if A mod P /= 0 then A * U + P * V = 1);
       pragma Assert (if A mod P /= 0 then A * B * U + P * V * B = B);
       pragma Assert (if A mod P /= 0 then k * P * U + P * V * B = B);
+
+      --  We prove the preconditions of CorrespDividTwo
       pragma Assert (if A mod P /= 0 then P * (k * U + V * B) = B);
       pragma Assert (if A mod P /= 0 then In_Range( Interval'(-abs B, abs B) , k * U + V * B ));
+
       pragma Assert (if A mod P /= 0 then CorrespDividTwo (B, P));
       pragma Assert (if A mod P /= 0 then B mod P = 0);
+      --  ======
 
       Pragma Assert (
          A mod P = 0 or 

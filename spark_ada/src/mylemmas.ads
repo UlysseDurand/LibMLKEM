@@ -16,17 +16,9 @@ is
 
    -- Prove a number is prime
    function Is_Prime (N : Big_Natural) return Boolean is
-   (N > 1 and then (
-      for all J in Interval'(2,N - 1) => ( N mod J /= 0)
-   ));
-
-   --  TODO change way to prove a number is prime ( or at least do not specify for a number)
-   procedure Number_Is_Prime (N : Big_Natural) with
-      Pre => N = 3329,
-      Post => Is_Prime(N),
-      Global => Null
-   ;
-
+      (N > 1 and then (
+         for all J in Interval'(2,N - 1) => ( N mod J /= 0)
+      ));
 
    --  === Correspondance between definitions of one number divides another ===
    --  Indeed, B divides A if and only if A mod B = 0 if and only if exists k such that A = k*B
