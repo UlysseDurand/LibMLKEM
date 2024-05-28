@@ -498,6 +498,86 @@ is
       return R;
    end "-";
 
+   function "*" (Left, Right : in Poly_Zq) return Poly_Zq
+      with no_Inline
+   is
+      Res : Poly_Zq := (others => 0);
+   begin
+      for i in Index_256'Range loop;
+         for j in i .. Index_256'Last loop;
+            k := i-j;
+
+         end loop;
+      end loop; 
+      return Res;
+   end "*";
+
+
+   function Degree (P : in Poly_Zq) return Index_256
+      with Post => (
+         for all i in Index_256 range Degree'Result .. Index_256'Last => (P (i) = 0)
+         );
+
+   function Degree (P : in Poly_Zq) return Index_256
+   is
+      res : Index_256 := 0;
+   begin
+      while (res <= Index_256'Last and then (P (res) /= 0)) loop
+         res := res + 1;
+      end loop;
+      return res;
+   end Degree;
+
+   function Monome (D : Index_256 ; R : Zq.T) return Poly_Zq
+      with Pre => D > 0,
+           Post => Degree (Monome'Result) = D;
+
+   function Monome (D : Index_256 ; R : Zq.T) return Poly_Zq
+   is
+      Res : Poly_Zq := (others => 0);
+   begin 
+      Res (0) := R;
+      Res (D) := 1;
+      return Res;
+   end Monome;
+
+   type resDivEuclid is record M : Poly_Zq ; R : Poly_Zq ; end record;
+
+
+   --  Divides P by Q
+
+   function DivPoly (P : in Poly_Zq;
+                     Q : in Poly_Zq) return resDivEuclid
+      with Post => (
+         Q * DivPoly'Result.M + DivPoly'Result.R = P and
+         Degree (DivPoly'Result.R) < Degree (Q) 
+      );
+
+   function DivPoly (P : in Poly_Zq;
+                     Q : in Poly_Zq) return resDivEuclid
+   is
+      res : resDivEuclid;
+      degP : Index_256;
+      degQ : Index_256;
+      lilP : Poly_Zq;
+      lilReduce : resDivEuclid;
+      term : Poly_Zq := (others => 0);
+   begin
+      degP := Degree (P);
+      degQ := Degree (Q);
+      if degQ >= degP then res.M := (others => 0); res.R := P;
+      else 
+         term (degP - degQ) := 1;
+         lilP := P - term * Q;
+         lilReduce := DivPoly (lilP, Q);
+         pragma Assert (Q * lilReduce.M + lilReduce.R = lilP);
+         pragma Assert (Q * (term + lilReduce.M) + lilReduce.R = P);
+         res.M := term + lilReduce.M;
+         res.R := lilReduce.R;
+      end if;
+      return res;
+   end DivPoly;
+
    function "+" (Left, Right : in NTT_Poly_Zq_Vector) return NTT_Poly_Zq_Vector
      with No_Inline
    is
@@ -1613,6 +1693,7 @@ is
             pragma Loop_Invariant (Count * Len = 128);
             pragma Loop_Invariant (J * 2 * Len <= 252);
             pragma Loop_Invariant (I32 (K) = 2**I + J);
+            pragma Assert (K < 128);
             NTT_Inner (Zeta  => Zeta_ExpC (K),
                        Start => J * 2 * Len);
             K := K + 1;
@@ -1646,7 +1727,7 @@ is
 
    --  Algorithm 9
    function NTT_Inv (F : in NTT_Poly_Zq) return Poly_Zq
-     with No_Inline
+     with No_Inline, Post => (NTT (NTT_Inv'Result) = F)
    is
       subtype K_T is Byte range 0 .. 127;
       F_Hat : Poly_Zq;
