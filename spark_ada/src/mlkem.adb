@@ -4,7 +4,7 @@
 with SHA3;  use SHA3;
 with SHAKE; use SHAKE;
 
---  with SPARK.Cut_Operations; use SPARK.Cut_Operations;
+with SPARK.Cut_Operations; use SPARK.Cut_Operations;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 with MyLemmas; use MyLemmas;
 
@@ -480,77 +480,137 @@ is
       return R;
    end "+";
 
+
    function "+" (Left, Right : in Poly_Zq) return Poly_Zq
-     with No_Inline
+     with Post => (
+      for all I in Index_256 => "+"'Result (I) = (Left (I) + Right (I))
+      );
+
+   function "+" (Left, Right : in Poly_Zq) return Poly_Zq
    is
    begin
       return Poly_Zq (NTT_Poly_Zq (Left) + NTT_Poly_Zq (Right)); --  calls _memcpy()
    end "+";
 
    function "-" (Left, Right : in Poly_Zq) return Poly_Zq
-     with No_Inline
+     with No_Inline,
+          Post => (for all I in Index_256 => "-"'Result (I) = (Left (I) - Right (I)));
+
+   function "-" (Left, Right : in Poly_Zq) return Poly_Zq
    is
-      R : Poly_Zq;
+      R : Poly_Zq with Relaxed_Initialization;
    begin
       for I in R'Range loop
          R (I) := Left (I) - Right (I); -- implicitly mod Q
+         pragma Loop_Invariant
+            (for all K in Index_256 range 0 .. I => R (K)'Initialized and then
+                                                    R (K) = (Left (K) - Right (K)));
       end loop;
       return R;
    end "-";
 
+   function "*" (left, Right : in Poly_Zq) return Poly_Zq
+          ; 
+
    function "*" (Left, Right : in Poly_Zq) return Poly_Zq
-      with no_Inline
    is
       Res : Poly_Zq := (others => 0);
+      K : Index_256;
    begin
-      for i in Index_256'Range loop;
-         for j in i .. Index_256'Last loop;
+      for i in Index_256'Range loop
+         for j in 0 .. i loop
             k := i-j;
+            Res (i) := Res (i) + Left (j mod Index_256'Last) * Right (k mod Index_256'Last);
+         end loop;
 
+         for j in i .. Index_256'Last + i loop
+            k := Index_256'Last + i - j;
+            Res (i) := Res (i) + Left (j mod Index_256'Last) * Right (k mod Index_256'Last);
          end loop;
       end loop; 
       return Res;
    end "*";
 
-
-   function Degree (P : in Poly_Zq) return Index_256
+   function Degree_Zq (P : in Poly_Zq) return Index_256
       with Post => (
-         for all i in Index_256 range Degree'Result .. Index_256'Last => (P (i) = 0)
+            (for all i in Degree_Zq'Result + 1 .. Index_256'Last => (P (i) = 0) ) and
+            (Degree_Zq'Result = 0 or P (Degree_Zq'Result) /= 0) and
+            (for all i in Index_256'Range => (if (P(i) /= 0) then Degree_Zq'Result >= i))
+            --  (for all i in Index_256'Range => (if (for all j in i + 1 .. Index_256'Last => (P(i) = 0) ) then Degree_Zq'Result <= i))
          );
 
-   function Degree (P : in Poly_Zq) return Index_256
+   function Degree_Zq (P : in Poly_Zq) return Index_256
    is
-      res : Index_256 := 0;
+      res : Index_256 := Index_256'Last;
    begin
-      while (res <= Index_256'Last and then (P (res) /= 0)) loop
-         res := res + 1;
-      end loop;
+      if P (res) = 0 then
+         while res > 0 and P(res) = 0 loop
+            pragma Loop_Invariant (res /=0 and P (res) = 0);
+            pragma Loop_Invariant (for all i in res .. Index_256'Last => (P (i) = 0));
+            --  pragma Loop_Invariant (for all i in res .. );
+            res := res - 1;
+         end loop;
+      end if;
       return res;
-   end Degree;
+   end Degree_Zq;
 
+   function Is_Poly_Nul (P : in Poly_Zq) return Boolean is (for all i in Index_256'Range => (P(i) = 0));
+
+   --  Returns (X^d - R)
    function Monome (D : Index_256 ; R : Zq.T) return Poly_Zq
       with Pre => D > 0,
-           Post => Degree (Monome'Result) = D;
+           Post => Degree_Zq (Monome'Result) = D;
 
    function Monome (D : Index_256 ; R : Zq.T) return Poly_Zq
    is
       Res : Poly_Zq := (others => 0);
+      degRes : Index_256;
    begin 
-      Res (0) := R;
+      Res (0) := -R;
       Res (D) := 1;
+      degRes := Degree_Zq (Res);
+      pragma Assert (degRes >= D);
+      pragma Assert ( for all i in D + 1 .. Index_256'Last => (Res (i) = 0) );
+      pragma Assert (degRes <= D);
       return Res;
    end Monome;
 
    type resDivEuclid is record M : Poly_Zq ; R : Poly_Zq ; end record;
 
+   function Lemma_Poly_Prop (P : )
+
+   function Lemma_Poly_Add_Minus (P, Q : in Poly_Zq) return Boolean
+      with Post => Lemma_Poly_Add_Minus'Result and (P - Q + Q = P);
+
+   function Lemma_Poly_Add_Minus (P, Q : in Poly_Zq) return Boolean 
+   is 
+      R : Poly_Zq := P - Q; 
+      S : Poly_Zq := R + Q; 
+   begin 
+      pragma Assert (for all I in Index_256'Range => R (i) = P (i) - Q(i) );
+      pragma Assert (for all I in Index_256'Range => S (i) = R (i) + Q(i) );
+      pragma Assert (for all I in Index_256'Range => S (i) = P (i) - Q(i) + Q(i) );
+      pragma Assert (S = P);
+      return True;
+   end;
+
+   function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
+      with Post => Lemma_Poly_Mult_Distrib_Add'Result and (R * P + R * Q) = R * (P + Q);
+
+   function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
+   is
+   begin
+      pragma Assert (R * P + R * Q = R * (P + Q));
+      return True;
+   end;
 
    --  Divides P by Q
 
    function DivPoly (P : in Poly_Zq;
                      Q : in Poly_Zq) return resDivEuclid
       with Post => (
-         Q * DivPoly'Result.M + DivPoly'Result.R = P and
-         Degree (DivPoly'Result.R) < Degree (Q) 
+         DivPoly'Result.R + Q * DivPoly'Result.M = P and
+         Degree_Zq (DivPoly'Result.R) < Degree_Zq (Q) 
       );
 
    function DivPoly (P : in Poly_Zq;
@@ -563,15 +623,21 @@ is
       lilReduce : resDivEuclid;
       term : Poly_Zq := (others => 0);
    begin
-      degP := Degree (P);
-      degQ := Degree (Q);
+      degP := Degree_Zq (P);
+      degQ := Degree_Zq (Q);
       if degQ >= degP then res.M := (others => 0); res.R := P;
       else 
          term (degP - degQ) := 1;
-         lilP := P - term * Q;
+         lilP := P - (Q * term);
          lilReduce := DivPoly (lilP, Q);
-         pragma Assert (Q * lilReduce.M + lilReduce.R = lilP);
-         pragma Assert (Q * (term + lilReduce.M) + lilReduce.R = P);
+         --  pragma Assert (lilReduce.R + Q * lilReduce.M = lilP);
+         pragma Assert (By (lilP + (Q * term) = P, Lemma_Poly_Add_Minus (P, Q * term)));
+         pragma Assert (lilReduce.R + ( (Q * lilReduce.M) + (Q * term) ) = P);
+         pragma Assert (By (
+            (Q * lilReduce.M) + (Q * term) = Q * (lilReduce.M + term),
+            Lemma_Poly_Mult_Distrib_Add (lilReduce.M, term, Q)
+         ));
+         pragma Assert (lilReduce.R + Q * (lilReduce.M + term) = P);
          res.M := term + lilReduce.M;
          res.R := lilReduce.R;
       end if;
