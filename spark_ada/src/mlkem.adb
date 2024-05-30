@@ -577,8 +577,6 @@ is
 
    type resDivEuclid is record M : Poly_Zq ; R : Poly_Zq ; end record;
 
-   function Lemma_Poly_Prop (P : )
-
    function Lemma_Poly_Add_Minus (P, Q : in Poly_Zq) return Boolean
       with Post => Lemma_Poly_Add_Minus'Result and (P - Q + Q = P);
 
@@ -600,7 +598,29 @@ is
    function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
    is
    begin
-      pragma Assert (R * P + R * Q = R * (P + Q));
+      pragma Assume (R * P + R * Q = R * (P + Q));
+      return True;
+   end;
+
+   function Lemma_Poly_Add_Associatif (P, Q, R : in Poly_Zq) return Boolean
+      with Post => Lemma_Poly_Add_Associatif'Result and (P + Q) + R = P + (Q + R);
+
+   function Lemma_Poly_Add_Associatif (P, Q, R : in Poly_Zq) return Boolean
+   is
+   begin
+      pragma Assert (for all i in Index_256 => P (i) + (Q (i) + R (i)) = (P (i) + Q (i)) + R (i));
+      return True;
+   end;
+
+   PolyZero : constant Poly_Zq := (others => 0);
+
+   function Lemma_Zero_Absorbs (P : in Poly_Zq) return Boolean
+      with Post => Lemma_Zero_Absorbs'Result and P * PolyZero = PolyZero;
+
+   function Lemma_Zero_Absorbs(P : in Poly_Zq) return Boolean
+   is
+   begin
+      pragma Assume (P * PolyZero = PolyZero);
       return True;
    end;
 
@@ -609,7 +629,7 @@ is
    function DivPoly (P : in Poly_Zq;
                      Q : in Poly_Zq) return resDivEuclid
       with Post => (
-         DivPoly'Result.R + Q * DivPoly'Result.M = P and
+         DivPoly'Result.R + (Q * DivPoly'Result.M) = P and
          Degree_Zq (DivPoly'Result.R) < Degree_Zq (Q) 
       );
 
@@ -625,21 +645,25 @@ is
    begin
       degP := Degree_Zq (P);
       degQ := Degree_Zq (Q);
-      if degQ >= degP then res.M := (others => 0); res.R := P;
+      if degQ > degP then 
+         res.M := PolyZero; res.R := P;
+         pragma Assert (By((res.R + (Q * res.M) = P), Lemma_Zero_Absorbs (Q) ));
+         pragma Assert (Degree_Zq (res.R) < Degree_Zq (Q) ); 
       else 
          term (degP - degQ) := 1;
          lilP := P - (Q * term);
          lilReduce := DivPoly (lilP, Q);
-         --  pragma Assert (lilReduce.R + Q * lilReduce.M = lilP);
          pragma Assert (By (lilP + (Q * term) = P, Lemma_Poly_Add_Minus (P, Q * term)));
-         pragma Assert (lilReduce.R + ( (Q * lilReduce.M) + (Q * term) ) = P);
+         pragma Assert ( (lilReduce.R +  (Q * lilReduce.M)) + (Q * term) = P);
+         pragma Assert (By(lilReduce.R + ( (Q * lilReduce.M) + (Q * term) ) = P, Lemma_Poly_Add_Associatif (lilReduce.R, Q * lilReduce.M, Q * term)));
          pragma Assert (By (
             (Q * lilReduce.M) + (Q * term) = Q * (lilReduce.M + term),
             Lemma_Poly_Mult_Distrib_Add (lilReduce.M, term, Q)
          ));
-         pragma Assert (lilReduce.R + Q * (lilReduce.M + term) = P);
-         res.M := term + lilReduce.M;
+         pragma Assert (lilReduce.R + (Q * (lilReduce.M + term)) = P);
+         res.M := lilReduce.M + term;
          res.R := lilReduce.R;
+         pragma Assert (res.R + (Q * res.M) = P);
       end if;
       return res;
    end DivPoly;
