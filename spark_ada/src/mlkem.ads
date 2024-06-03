@@ -2,6 +2,7 @@
 --  SPDX-License-Identifier: Apache-2.0
 
 with Interfaces; use Interfaces;
+with SPARK.Big_Integers; use SPARK.Big_Integers;
 package MLKEM
   with SPARK_Mode => On
 is
@@ -16,6 +17,7 @@ is
    --  from FIPS 203 section 7
    Q      : constant := 3329;
    N      : constant := 256;
+   N_INV  : constant := 3277;
 
    ----------------------------------------------------------------------
    --  TODO - make the entire package generic over these parameter values
@@ -57,9 +59,12 @@ is
        --  ML-KEM-1024
        (K = 4 and Eta_1 = 2 and Eta_2 = 2 and DU = 11 and DV = 5));
 
+
    subtype Byte is Unsigned_8;
    subtype I32  is Integer_32;
    subtype N32  is I32 range 0 .. I32'Last;
+
+   subtype Index_256 is I32 range 0 .. 255;
 
    --  Unconstrained (aka "Size Polymorphic") array of bytes
    type Byte_Seq is array (N32 range <>) of Byte;
@@ -172,6 +177,52 @@ private
               Global => null,
               Post   => ModQ'Result = T (X mod Q);
 
+      --  Returns the inverse if Zq, only used in proof and specification
+      --  so it has the Ghost flag and constant time isn't needed      
+      --  function Inverse (A : T) return T
+      --     with Ghost,
+      --          Pre => A /= 0,
+      --          Post => A * Inverse'Result = 1;
+
+      --  Returns A ** B, only used in proof and specification
+      --  so it has the Ghost flag and constant time isn't needed
+      function "**" (A : T;
+                     B : Big_Natural) return T;
+
+      type Zq_Function_Access is not null access function (X : Index_256) return T;
+
+      type K_Range is range 0 .. K - 1;
+
+      type Poly_Zq is array (Index_256) of Zq.T;
+
+      type Poly_Zq_Vector is array (K_Range) of Poly_Zq;
+
+      --  Polynomials in the NTT domain are structurally identical to the
+      --  above, but should never be mixed up with them, so we declare
+      --  an explicitly derived named types for them here.
+      type NTT_Poly_Zq is new Poly_Zq;
+      type NTT_Poly_Zq_Vector is array (K_Range) of NTT_Poly_Zq;
+      type NTT_Poly_Matrix    is array (K_Range) of NTT_Poly_Zq_Vector;
+
+      generic
+         with function Func (P1     : Poly_Zq;
+                             P2     : Index_256; 
+                             J      : Index_256) return T;
+      function Sum_Parametrized    (A : Index_256;
+                                    B : Index_256; 
+                                    P1: Poly_Zq;
+                                    P2 : Index_256) return T;
+
+      generic
+         with function Func_NTT (P1    : NTT_Poly_Zq;
+                                 P2    : Index_256; 
+                                 I     : Index_256) return T;
+      function Sum_Parametrized_NTT(A : Index_256;
+                                    B : Index_256; 
+                                    P1: NTT_Poly_Zq;
+                                    P2 : Index_256) return T;
+
+
       --  Forbid all other predefined operators on T
       function "+"   (Right : in T) return T is abstract;
       function "-"   (Right : in T) return T is abstract;
@@ -188,6 +239,11 @@ private
       pragma Unreferenced ("/");
       pragma Unreferenced ("mod");
       pragma Unreferenced ("rem");
+
+      Zeta : constant T := 17;
+      Zeta_Inv : constant T := 1175;
+
    end Zq;
+
 
 end MLKEM;

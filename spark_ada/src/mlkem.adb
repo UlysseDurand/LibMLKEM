@@ -126,6 +126,8 @@ is
 
       function I32_To_Big_Integer (A : I32) return Big_Integer is (To_Big_Integer (Integer(A))); 
 
+      --  function Big_Integer_To_I32 (A : Big_Integer) return Integer is (I32 (From_Big_Integer (A))); 
+
       function "*" (Left, Right : in T) return T
       is
          subtype Zq_Product is I32 range 0 .. ((Q - 1) ** 2);
@@ -295,24 +297,58 @@ is
          return T (Shift_Right (U16 (Right), 1));
       end Div2;
 
+      --  This is not constant time but it isn't meant to be executed, it has the Ghost annotation
+      --  function Inverse (A : in T) return T
+      --  is
+      --     BigA : Big_Integer := I32_To_Big_Integer (I32 (A));
+      --     TheGcd : Ext_cd := Ext_gcd (BigA, Q);
+      --     res : Big_Integer := TheGcd.U;
+      --     IntegerRes : Integer;
+      --  begin
+      --     pragma Assert (BiGA * res + Q * TheGcd.V = TheGcd.D);
+      --     IntegerRes := To_Integer(res);
+      --     return (T (IntegerRes));
+      --  end;
+
+
+      --  This is the power function on T.
+      function "**" (A : T ; B : Big_Natural) return T is
+      (if B = 0 then 1 else A * ("**" (A, B - 1)) );
+
+ 
+      --  Generic functions, taking P1 and P2 as constant parameters,
+      --  Summing the result of Func over I.
+      function Sum_Parametrized     (A : Index_256;
+                                     B : Index_256;
+                                     P1: Poly_Zq;
+                                     P2 : Index_256) return T 
+      is
+         Res : T := 0;
+         begin
+            for J in A .. B loop
+               Res := Res + Func (P1, P2, J);
+            end loop;
+         return Res;
+      end Sum_Parametrized;
+
+      function Sum_Parametrized_NTT (A : Index_256;
+                                     B : Index_256;
+                                     P1: NTT_Poly_Zq;
+                                     P2 : Index_256) return T 
+      is
+         Res : T := 0;
+         begin
+            for I in A .. B loop
+               Res := Res + Func_NTT (P1, P2, I);
+            end loop;
+         return Res;
+      end Sum_Parametrized_NTT;
+
    end Zq;
 
    --  Make everything in Zq directly visible from here on
    use Zq;
 
-   type K_Range is range 0 .. K - 1;
-
-   subtype Index_256 is I32 range 0 .. 255;
-   type Poly_Zq is array (Index_256) of Zq.T;
-
-   type Poly_Zq_Vector is array (K_Range) of Poly_Zq;
-
-   --  Polynomials in the NTT domain are structurally identical to the
-   --  above, but should never be mixed up with them, so we declare
-   --  an explicitly derived named types for them here.
-   type NTT_Poly_Zq is new Poly_Zq;
-   type NTT_Poly_Zq_Vector is array (K_Range) of NTT_Poly_Zq;
-   type NTT_Poly_Matrix    is array (K_Range) of NTT_Poly_Zq_Vector;
 
 
 
@@ -1817,7 +1853,8 @@ is
 
    --  Algorithm 9
    function NTT_Inv (F : in NTT_Poly_Zq) return Poly_Zq
-     with No_Inline, Post => (NTT (NTT_Inv'Result) = F)
+     with No_Inline 
+         --   Post => (NTT (NTT_Inv'Result) = F)
    is
       subtype K_T is Byte range 0 .. 127;
       F_Hat : Poly_Zq;
@@ -2248,6 +2285,45 @@ is
       pragma Unreferenced (K_Bar);
       return Result;
    end MLKEM_Decaps;
+
+
+   function NTT_Ref (A : in Poly_Zq) return NTT_Poly_Zq
+      with Ghost
+   is
+      A_HAT : NTT_Poly_Zq;
+      function The_Func (P1 : Poly_Zq;
+                         P2 : Index_256; 
+                         I : Index_256) return T is
+         ((Zeta ** (To_Big_Integer (Integer (I)) * To_Big_Integer (Integer (P2)))) * P1 (I));
+
+      function My_Sum is new Sum_Parametrized (Func => The_Func);
+   begin
+      for I in Index_256'Range loop
+         --  A and J stay constant here, we sum over the last parameter of The_Func
+         A_HAT (I) := (My_Sum (0, Index_256'Last, A, I));
+      end loop;
+      return A_HAT;
+   end NTT_Ref;
+
+
+   function NTT_Inv_Ref (A_HAT : in NTT_Poly_Zq) return Poly_Zq
+      with Ghost
+   is
+      A : Poly_Zq;
+      function The_Func (P1 : NTT_Poly_Zq;
+                         P2 : Index_256; 
+                         J : Index_256) return T is
+         ((Zeta_Inv ** (To_Big_Integer (Integer (P2)) * To_Big_Integer (Integer (J)))) * P1 (J));
+
+      function My_Sum is new Sum_Parametrized_NTT (Func_NTT => The_Func);
+   begin
+      for I in Index_256'Range loop
+         --  A_HAT and I stay constant here, we sum over the last parameter of The_Func
+         A (I) := N_INV * (My_Sum (0, Index_256'Last, A_HAT, I));
+      end loop;
+      return A;
+   end NTT_Inv_Ref;
+
 
 end MLKEM;
 
