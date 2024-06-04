@@ -136,7 +136,7 @@ is
          R2     : I64;
 
          TA, TB, R, R3, R4 : I32;
-         BigTA, BigTB, BigQ : Big_Integer;
+         BigTA, BigTB: Big_Integer;
       begin
          --  This implementation computes (Left * Right) mod Q
          --  using the Barrett/Montgomery reduction trick (See PLDI '94 for
@@ -169,7 +169,6 @@ is
          --  We will use lemmas we've proved on Big_Integers to prove L2
          BigTA := I32_To_Big_Integer(TA);
          BigTB := I32_To_Big_Integer(TB);
-         BigQ := I32_To_Big_Integer(Q);
 
          --  We need Q to be prime
          pragma Assert (Is_Prime (BigQ));
@@ -298,17 +297,25 @@ is
       end Div2;
 
       --  This is not constant time but it isn't meant to be executed, it has the Ghost annotation
-      --  function Inverse (A : in T) return T
-      --  is
-      --     BigA : Big_Integer := I32_To_Big_Integer (I32 (A));
-      --     TheGcd : Ext_cd := Ext_gcd (BigA, Q);
-      --     res : Big_Integer := TheGcd.U;
-      --     IntegerRes : Integer;
-      --  begin
-      --     pragma Assert (BiGA * res + Q * TheGcd.V = TheGcd.D);
-      --     IntegerRes := To_Integer(res);
-      --     return (T (IntegerRes));
-      --  end;
+      function Inverse (A : in T) return T
+      is
+         BigA : Big_Integer := Zq_To_Big (A);
+         The_Gcd : Ext_cd := Ext_gcd (BigA, BigQ);
+         Big_Res : Big_Integer := The_Gcd.U;
+         Zq_Res : Big_Integer;
+         Res : T;
+      begin
+         pragma Assert (Is_Prime (BigQ));
+         pragma Assert (BiGA * Big_Res + BigQ * The_Gcd.V = The_Gcd.D);
+         Zq_Res := Big_res mod (BigQ);
+         pragma Assert (The_Gcd.D = 1);
+         pragma Assert ((BigA * Big_Res) mod BigQ = 1);
+         Res := T (To_Integer (Zq_Res));
+         pragma Assert (Big_Res = Zq_To_Big(Res));
+         pragma Assert (Big_To_Zq ( Zq_To_Big(A) * Zq_To_Big(Res)  ) = A * Res);
+         pragma Assert ((T (To_Integer (BigA))) * Res = 1);
+         return Res;
+      end;
 
 
       --  This is the power function on T.
@@ -629,17 +636,13 @@ is
    end;
 
    function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
-      with Post => Lemma_Poly_Mult_Distrib_Add'Result and (R * P + R * Q) = R * (P + Q);
-
-   function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
-   is
-   begin
-      pragma Assume (R * P + R * Q = R * (P + Q));
-      return True;
-   end;
+      with SPARK_Mode => Off,
+           Post => Lemma_Poly_Mult_Distrib_Add'Result and 
+                   (R * P + R * Q) = R * (P + Q);
 
    function Lemma_Poly_Add_Associatif (P, Q, R : in Poly_Zq) return Boolean
-      with Post => Lemma_Poly_Add_Associatif'Result and (P + Q) + R = P + (Q + R);
+      with Post => Lemma_Poly_Add_Associatif'Result and 
+                   (P + Q) + R = P + (Q + R);
 
    function Lemma_Poly_Add_Associatif (P, Q, R : in Poly_Zq) return Boolean
    is
@@ -651,14 +654,9 @@ is
    PolyZero : constant Poly_Zq := (others => 0);
 
    function Lemma_Zero_Absorbs (P : in Poly_Zq) return Boolean
-      with Post => Lemma_Zero_Absorbs'Result and P * PolyZero = PolyZero;
-
-   function Lemma_Zero_Absorbs(P : in Poly_Zq) return Boolean
-   is
-   begin
-      pragma Assume (P * PolyZero = PolyZero);
-      return True;
-   end;
+      with SPARK_Mode => Off,
+           Post => Lemma_Zero_Absorbs'Result and 
+                   P * PolyZero = PolyZero;
 
    --  Divides P by Q
 

@@ -70,7 +70,7 @@ is
    --  Still, we don't prove that the resulting D is the greatest of the common divisors 
    function Ext_gcd (A : Big_Natural;
                      B : Big_Natural) return Ext_cd
-      with Ghost,
+      with
          --  Always_Return annotation is needed to make SPARK verify that this function terminates.
          Annotate => (GNATprove, Always_Return),
          --  We know the recurive function terminates because B in the subcall is strictly less than the initial B

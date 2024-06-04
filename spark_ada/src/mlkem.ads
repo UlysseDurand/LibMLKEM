@@ -3,6 +3,8 @@
 
 with Interfaces; use Interfaces;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
+with MyLemmas; use MyLemmas;
+
 package MLKEM
   with SPARK_Mode => On
 is
@@ -146,7 +148,15 @@ private
       type T is mod Q
         with Object_Size => 16;
 
+      BigQ : constant Big_Integer := To_Big_Integer (Q);
+
+      pragma Assert (Is_Prime(BigQ));
+
       subtype Zq_Bit is T range 0 .. 1;
+
+      function Zq_To_Big (A : T) return Big_Integer is (To_Big_Integer (Integer (A)));
+
+      function Big_To_Zq (A : Big_Integer) return T is ( T (To_Integer (A mod BigQ)) );
 
       --  OVERRIDE the opertors that we wish to allow for T, but
       --  to allow for implementations which are specific to a particular
@@ -164,7 +174,8 @@ private
       function "*" (Left, Right : in T) return T
          with No_Inline,
               Global => null,
-              Post => "*"'Result = T ((I64 (Left) * I64 (Right)) mod Q);
+              Post => "*"'Result = T ((I64 (Left) * I64 (Right)) mod Q) and
+                      "*"'Result = Big_To_Zq (Zq_To_Big (Left) * Zq_To_Big (Right)) ;
 
       --  Divide "Right" by 2
       function Div2 (Right : in T) return T
@@ -179,10 +190,10 @@ private
 
       --  Returns the inverse if Zq, only used in proof and specification
       --  so it has the Ghost flag and constant time isn't needed      
-      --  function Inverse (A : T) return T
-      --     with Ghost,
-      --          Pre => A /= 0,
-      --          Post => A * Inverse'Result = 1;
+      function Inverse (A : T) return T
+         with Ghost,
+              Pre => A /= 0,
+              Post => A * Inverse'Result = 1;
 
       --  Returns A ** B, only used in proof and specification
       --  so it has the Ghost flag and constant time isn't needed
