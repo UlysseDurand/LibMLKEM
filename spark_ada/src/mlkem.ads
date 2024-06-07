@@ -68,6 +68,9 @@ is
 
    subtype Index_256 is I32 range 0 .. 255;
 
+   function Index_256_To_Big (A : Index_256) return Big_Integer
+   is (To_Big_Integer (Integer (A)));
+
    --  Unconstrained (aka "Size Polymorphic") array of bytes
    type Byte_Seq is array (N32 range <>) of Byte;
 
@@ -150,13 +153,29 @@ private
 
       BigQ : constant Big_Integer := To_Big_Integer (Q);
 
-      pragma Assert (Is_Prime(BigQ));
 
       subtype Zq_Bit is T range 0 .. 1;
 
+      function Lemma_Q_Prime return Boolean 
+         with Post => Lemma_Q_Prime'Result and
+                      Is_Prime (BigQ);
+
+      function Lemma_Q_Prime return Boolean
+      is (True);
+
       function Zq_To_Big (A : T) return Big_Integer is (To_Big_Integer (Integer (A)));
 
+      function Big_To_Zq (A : Big_Integer) return T
+         with Post => (Zq_To_Big (Big_To_Zq'Result) = A mod BigQ);
+
       function Big_To_Zq (A : Big_Integer) return T is ( T (To_Integer (A mod BigQ)) );
+
+      function Lemma_Big_To_Zq_Morp (A : Big_Integer;
+                                     B : Big_Integer) return Boolean
+         with Ghost,
+              Post => Lemma_Big_To_Zq_Morp'Result and
+                      Big_To_Zq (A * B) = Big_To_Zq (A) * Big_To_Zq (B);
+
 
       --  OVERRIDE the opertors that we wish to allow for T, but
       --  to allow for implementations which are specific to a particular
@@ -200,8 +219,6 @@ private
       function "**" (A : T;
                      B : Big_Natural) return T;
 
-      type Zq_Function_Access is not null access function (X : Index_256) return T;
-
       type K_Range is range 0 .. K - 1;
 
       type Poly_Zq is array (Index_256) of Zq.T;
@@ -214,25 +231,6 @@ private
       type NTT_Poly_Zq is new Poly_Zq;
       type NTT_Poly_Zq_Vector is array (K_Range) of NTT_Poly_Zq;
       type NTT_Poly_Matrix    is array (K_Range) of NTT_Poly_Zq_Vector;
-
-      generic
-         with function Func (P1     : Poly_Zq;
-                             P2     : Index_256; 
-                             J      : Index_256) return T;
-      function Sum_Parametrized    (A : Index_256;
-                                    B : Index_256; 
-                                    P1: Poly_Zq;
-                                    P2 : Index_256) return T;
-
-      generic
-         with function Func_NTT (P1    : NTT_Poly_Zq;
-                                 P2    : Index_256; 
-                                 I     : Index_256) return T;
-      function Sum_Parametrized_NTT(A : Index_256;
-                                    B : Index_256; 
-                                    P1: NTT_Poly_Zq;
-                                    P2 : Index_256) return T;
-
 
       --  Forbid all other predefined operators on T
       function "+"   (Right : in T) return T is abstract;
@@ -250,9 +248,6 @@ private
       pragma Unreferenced ("/");
       pragma Unreferenced ("mod");
       pragma Unreferenced ("rem");
-
-      Zeta : constant T := 17;
-      Zeta_Inv : constant T := 1175;
 
    end Zq;
 

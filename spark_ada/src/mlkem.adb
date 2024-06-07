@@ -296,69 +296,50 @@ is
          return T (Shift_Right (U16 (Right), 1));
       end Div2;
 
-      --  This is not constant time but it isn't meant to be executed, it has the Ghost annotation
+      function Lemma_Big_To_Zq_Morp (A : Big_Integer;
+                                     B : Big_Integer) return Boolean
+      is
+         R1 : Big_Integer := A mod BigQ;
+         K1 : Big_Integer := Corresp_Divid_One (A - R1, BigQ);
+         R2 : Big_Integer := B mod BigQ;
+         K2 : Big_Integer := Corresp_Divid_One (B - R2, BigQ);
+      begin
+         pragma Assert (Q * K1 + R1 = A);
+         pragma Assert (Q * K2 + R2 = B);
+         pragma Assert (Q * (Q * K1 * K2 + K1 * R2 + K2 * R1) + R1 * R2 = A * B);
+         pragma Assert ((A * B) mod BigQ = (A mod BigQ) * (B mod BigQ) mod BigQ);
+         pragma Assert (Big_To_Zq (A * B) = Big_To_Zq (A) * Big_To_Zq (B));
+         return True;
+      end Lemma_Big_To_Zq_Morp;
+
       function Inverse (A : in T) return T
       is
          BigA : Big_Integer := Zq_To_Big (A);
          The_Gcd : Ext_cd := Ext_gcd (BigA, BigQ);
          Big_Res : Big_Integer := The_Gcd.U;
-         Zq_Res : Big_Integer;
          Res : T;
       begin
-         pragma Assert (Is_Prime (BigQ));
+         pragma Assert (By( Is_Prime (BigQ), Lemma_Q_Prime));
          pragma Assert (BiGA * Big_Res + BigQ * The_Gcd.V = The_Gcd.D);
-         Zq_Res := Big_res mod (BigQ);
          pragma Assert (The_Gcd.D = 1);
          pragma Assert ((BigA * Big_Res) mod BigQ = 1);
-         Res := T (To_Integer (Zq_Res));
-         pragma Assert (Big_Res = Zq_To_Big(Res));
+         pragma Assert (Big_To_Zq (BigA * Big_Res) = 1);
+         pragma Assert (By (Big_To_Zq (BigA) * Big_To_Zq (Big_Res) = 1, Lemma_Big_To_Zq_Morp(BigA, Big_Res)));
+         Res := Big_To_Zq (Big_Res);
+         pragma Assert (Big_Res mod BigQ = Zq_To_Big(Res));
          pragma Assert (Big_To_Zq ( Zq_To_Big(A) * Zq_To_Big(Res)  ) = A * Res);
-         pragma Assert ((T (To_Integer (BigA))) * Res = 1);
+         pragma Assert (Big_To_Zq (BigA) * Res = 1);
          return Res;
-      end;
-
+      end Inverse;
 
       --  This is the power function on T.
       function "**" (A : T ; B : Big_Natural) return T is
       (if B = 0 then 1 else A * ("**" (A, B - 1)) );
 
- 
-      --  Generic functions, taking P1 and P2 as constant parameters,
-      --  Summing the result of Func over I.
-      function Sum_Parametrized     (A : Index_256;
-                                     B : Index_256;
-                                     P1: Poly_Zq;
-                                     P2 : Index_256) return T 
-      is
-         Res : T := 0;
-         begin
-            for J in A .. B loop
-               Res := Res + Func (P1, P2, J);
-            end loop;
-         return Res;
-      end Sum_Parametrized;
-
-      function Sum_Parametrized_NTT (A : Index_256;
-                                     B : Index_256;
-                                     P1: NTT_Poly_Zq;
-                                     P2 : Index_256) return T 
-      is
-         Res : T := 0;
-         begin
-            for I in A .. B loop
-               Res := Res + Func_NTT (P1, P2, I);
-            end loop;
-         return Res;
-      end Sum_Parametrized_NTT;
-
    end Zq;
 
    --  Make everything in Zq directly visible from here on
    use Zq;
-
-
-
-
 
    subtype NTT_Len_Bit_Index is Natural range 0 .. 6;
    subtype NTT_Len_Power     is Natural range 1 .. 7;
@@ -618,7 +599,7 @@ is
       return Res;
    end Monome;
 
-   type resDivEuclid is record M : Poly_Zq ; R : Poly_Zq ; end record;
+   type resDivEuclidPoly is record M : Poly_Zq ; R : Poly_Zq ; end record;
 
    function Lemma_Poly_Add_Minus (P, Q : in Poly_Zq) return Boolean
       with Post => Lemma_Poly_Add_Minus'Result and (P - Q + Q = P);
@@ -633,12 +614,17 @@ is
       pragma Assert (for all I in Index_256'Range => S (i) = P (i) - Q(i) + Q(i) );
       pragma Assert (S = P);
       return True;
-   end;
+   end Lemma_Poly_Add_Minus;
 
    function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
-      with SPARK_Mode => Off,
-           Post => Lemma_Poly_Mult_Distrib_Add'Result and 
+      with Post => Lemma_Poly_Mult_Distrib_Add'Result and 
                    (R * P + R * Q) = R * (P + Q);
+   function Lemma_Poly_Mult_Distrib_Add (P, Q, R : in Poly_Zq) return Boolean
+   is
+   begin
+      pragma Assume (R * P + R * Q = R * (P + Q));
+      return True;
+   end Lemma_Poly_Mult_Distrib_Add;
 
    function Lemma_Poly_Add_Associatif (P, Q, R : in Poly_Zq) return Boolean
       with Post => Lemma_Poly_Add_Associatif'Result and 
@@ -649,32 +635,38 @@ is
    begin
       pragma Assert (for all i in Index_256 => P (i) + (Q (i) + R (i)) = (P (i) + Q (i)) + R (i));
       return True;
-   end;
+   end Lemma_Poly_Add_Associatif;
 
    PolyZero : constant Poly_Zq := (others => 0);
 
    function Lemma_Zero_Absorbs (P : in Poly_Zq) return Boolean
-      with SPARK_Mode => Off,
-           Post => Lemma_Zero_Absorbs'Result and 
+      with Post => Lemma_Zero_Absorbs'Result and 
                    P * PolyZero = PolyZero;
+
+   function Lemma_Zero_Absorbs (P : in Poly_Zq) return Boolean
+   is
+   begin
+      pragma Assume (P * PolyZero = PolyZero);
+      return True;
+   end Lemma_Zero_Absorbs;
 
    --  Divides P by Q
 
    function DivPoly (P : in Poly_Zq;
-                     Q : in Poly_Zq) return resDivEuclid
+                     Q : in Poly_Zq) return resDivEuclidPoly
       with Post => (
          DivPoly'Result.R + (Q * DivPoly'Result.M) = P and
          Degree_Zq (DivPoly'Result.R) < Degree_Zq (Q) 
       );
 
    function DivPoly (P : in Poly_Zq;
-                     Q : in Poly_Zq) return resDivEuclid
+                     Q : in Poly_Zq) return resDivEuclidPoly
    is
-      res : resDivEuclid;
+      res : resDivEuclidPoly;
       degP : Index_256;
       degQ : Index_256;
       lilP : Poly_Zq;
-      lilReduce : resDivEuclid;
+      lilReduce : resDivEuclidPoly;
       term : Poly_Zq := (others => 0);
    begin
       degP := Degree_Zq (P);
@@ -2283,45 +2275,6 @@ is
       pragma Unreferenced (K_Bar);
       return Result;
    end MLKEM_Decaps;
-
-
-   function NTT_Ref (A : in Poly_Zq) return NTT_Poly_Zq
-      with Ghost
-   is
-      A_HAT : NTT_Poly_Zq;
-      function The_Func (P1 : Poly_Zq;
-                         P2 : Index_256; 
-                         I : Index_256) return T is
-         ((Zeta ** (To_Big_Integer (Integer (I)) * To_Big_Integer (Integer (P2)))) * P1 (I));
-
-      function My_Sum is new Sum_Parametrized (Func => The_Func);
-   begin
-      for I in Index_256'Range loop
-         --  A and J stay constant here, we sum over the last parameter of The_Func
-         A_HAT (I) := (My_Sum (0, Index_256'Last, A, I));
-      end loop;
-      return A_HAT;
-   end NTT_Ref;
-
-
-   function NTT_Inv_Ref (A_HAT : in NTT_Poly_Zq) return Poly_Zq
-      with Ghost
-   is
-      A : Poly_Zq;
-      function The_Func (P1 : NTT_Poly_Zq;
-                         P2 : Index_256; 
-                         J : Index_256) return T is
-         ((Zeta_Inv ** (To_Big_Integer (Integer (P2)) * To_Big_Integer (Integer (J)))) * P1 (J));
-
-      function My_Sum is new Sum_Parametrized_NTT (Func_NTT => The_Func);
-   begin
-      for I in Index_256'Range loop
-         --  A_HAT and I stay constant here, we sum over the last parameter of The_Func
-         A (I) := N_INV * (My_Sum (0, Index_256'Last, A_HAT, I));
-      end loop;
-      return A;
-   end NTT_Inv_Ref;
-
 
 end MLKEM;
 
