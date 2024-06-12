@@ -1,77 +1,101 @@
 --  This requires the type returnType to have "+"
-generic
-    N : Integer;
-package SumGen 
-    with SPARK_Mode => On
+package SumGen
+    with SPARK_Mode => On 
 is
-    type IndexRange is range 0 .. N-1;
-    type Partial is array (IndexRange) of Boolean;
+    
+    generic 
+        type P_ElementType is mod <>;
+        type P_IndexRange is range <>;
+        type InputType is array (P_IndexRange) of P_ElementType; 
 
-
-
-
-    generic
-        type Type1 is private;
-        type Type2 is private;
-        type IndexRange is range <>;
-        type ReturnType is mod <>;
-        Zero : ReturnType;
-        with function Func (P1     : Type1;
-                            P2     : Type2; 
-                            J      : IndexRange) return ReturnType;
-
-    package Generic_Sum 
+    package Sum_On_Array 
         with SPARK_Mode => On
     is
-        function Sum (P1 : Type1;
-                      P2 : Type2;
-                      A : IndexRange;
-                      B : IndexRange) return ReturnType;
+        subtype ElementType is P_ElementType;
+        subtype IndexRange is P_IndexRange;
 
-        function Lemma_Sum_Splitable (P1 : Type1;
-                                      P2 : Type2;
-                                      A : IndexRange; 
-                                      B : IndexRange; 
-                                      C : IndexRange) return Boolean
-            with Pre => C > A and C <= B,
-                Post => Lemma_Sum_Splitable'Result and
-                        Sum (P1, P2, A, C - 1) + Sum (P1, P2, C, B) = Sum (P1, P2, A, C);
-    end Generic_Sum;
+        function Partial_Sum (A : InputType;
+                              Max_Index : IndexRange) return ElementType
+            with Subprogram_Variant => (Decreases => Max_Index),
+                 Annotate => (GNATprove, Always_Return);
+
+        function "+" (F : InputType;
+                      G : InputType) return InputType
+            with Post => (for all I in IndexRange => ("+"'Result (I) = F (I) + G (I)));
+
+        function Sum (X : InputType) return ElementType 
+        is 
+            (Partial_Sum (X, IndexRange'Last));
+            
+        function Lemma_Partial_Sum_Disjoint (F : InputType;
+                                             G : InputType;
+                                             Max_Index : IndexRange) return Boolean
+            with Subprogram_Variant => (Decreases => Max_Index),
+                 Annotate => (GNATprove, Always_Return),
+                 Post => Lemma_Partial_Sum_Disjoint'Result and
+                         Partial_Sum (F, Max_Index) + Partial_Sum (G, Max_Index) = Partial_Sum (F + G, Max_Index); 
+
+        function Lemma_Add_Associative (A : ElementType;
+                                        B : ElementType;
+                                        C : ElementType) return Boolean
+            with Post => Lemma_Add_Associative'Result and
+                         (A + B) + C = A + (B + C);
+
+        function Lemma_Add_Commutative (A : ElementType;
+                                        B : ElementType) return Boolean
+            with Post => Lemma_Add_Commutative'Result and
+                         A + B = B + A;
+
+        function Extract_Even (F : InputType) return InputType
+            with Post => (for all I in IndexRange => Extract_Even'Result (i) = (if (I mod 2 = 0) then F (i) else 0));
+
+        function Extract_Odd (F : InputType) return InputType
+            with Post => (for all I in IndexRange => Extract_Odd'Result (i) = (if (I mod 2 = 0) then 0 else F(i)));
+
+        function Lemma_Split_Odd_Even (A :  InputType) return Boolean
+            with Post => Lemma_Split_Odd_Even'Result and
+                         Sum (A) = Sum (Extract_Even (A) + Extract_Odd (A));
+
+    end Sum_On_Array;
 
     generic
-        type elements is private:
-        type indexGlobal is range <>;
-        with 
+        Length : Integer;
+        type ElementType is mod <>;
+        type SmallIndexRange is range 0 .. (Length - 1);
+        type BigIndexRange is range 0 .. (2 * Length - 1);
+        type SmallArray is array (SmallIndexRange) of ElementType;
+        type BigArray is array (BigIndexRange) of ElementType;
+
+    package Generic_Split_Sum is
+        function Small_To_Big (A : SmallIndexRange) return BigIndexRange
+        is
+            (BigIndexRange(A));
+
+        function Extract_Even (F : BigArray) return SmallArray
+            with Post => (for all I in SmallIndexRange => Extract_Even'Result (i) = F (2 * Small_To_Big (I)));
+
+        function Extract_Odd (F : BigArray) return SmallArray
+            with Post => (for all I in SmallIndexRange => Extract_Odd'Result (i) = F(2 * Small_To_Big (I) + 1));
+
+        package SmallSummer is new Sum_On_Array (ElementType, SmallIndexRange, SmallArray);
+        package BigSummer is new Sum_On_Array (ElementType, BigIndexRange, BigArray);
+
+        function Lemma_Split_Odd_Even (A :  BigArray) return Boolean
+            with Post => Lemma_Split_Odd_Even'Result and
+                         BigSummer.Sum (A) = SmallSummer.Sum (Extract_Even (A)) + SmallSummer.Sum (Extract_Odd (A));
+
+    end Generic_Split_Sum; 
 
     generic 
-        type InType is private;
-        type IntermediateType is private;
-        type ReturnType is private;
-        with function F (A : InType) return ReturnType;
-        with function G (B : InType) return ReturnType;
-    function Compose (A : InType) return ReturnType;
-
-    generic
-        Q : Integer;
-        type ReturnType is mod Q;
-    function To_Even (A : ReturnType) return ReturnType is
-        (ReturnType (2) * A);
-
-    generic
-        Q : Integer;
-        type ReturnType is mod Q;
-    function To_Odd (A : ReturnType) return ReturnType is
-        (ReturnType (2) * A + ReturnType (1));
-
-    generic Generic_Lemma_Sum_Odd_Even
-        type Type1 is private;
-        type Type2 is private;
+        type InType is mod <>;
+        type OutType is mod <>;
         type IndexRange is range <>;
-        type ReturnType is mod <>;
-        Zero : ReturnType;
-        with function Func (P1 : Type1;
-                            P2 : Type2;
-                            J : IndexRange) return ReturnType;
-        function Lemma_Sum_Odd_Even 
+        with function Func (A : InType) return OutType;
+    package Generic_Apply_To_Array 
+    is
+        type InputTypeA is array (IndexRange) of InType;
+        type InputTypeB is array (IndexRange) of OutType;
+        function Apply_To_Array (X : InputTypeA) return InputTypeB; 
+    end Generic_Apply_To_Array;
 
 end SumGen;

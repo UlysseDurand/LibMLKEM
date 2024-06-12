@@ -1,0 +1,27 @@
+
+with SumGen;
+
+package body MLKEM.Reference
+   with SPARK_Mode => On 
+is
+
+   package The_Sum_NTT_Poly_Zq is new SumGen.Sum_On_Array (T, Index_256, NTT_Poly_Zq);
+
+   function NTT_Ref (A : in Poly_Zq) return NTT_Poly_Zq
+   is
+      A_HAT : NTT_Poly_Zq;
+   begin
+      for I in Index_256'Range loop
+         declare
+            Array_To_Sum : NTT_Poly_Zq;
+         begin
+            for J in Index_256 loop
+            Array_To_Sum (J) := (Psi ** (2 * Index_256_To_Big (I) * Index_256_To_Big (J) + Index_256_To_Big (I)) * A (I));
+            end loop;
+            A_HAT (I) := The_Sum_NTT_Poly_Zq.Sum (Array_To_Sum);
+         end;
+      end loop;
+      return A_HAT;
+   end NTT_Ref;
+
+end MLKEM.Reference;
