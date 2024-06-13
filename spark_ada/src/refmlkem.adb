@@ -15,7 +15,7 @@ is
             for J in Index_Ref loop
             Array_To_Sum (J) := (Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * A (I));
             end loop;
-            A_HAT (I) := The_Sum_NTT_Poly_Zq.Sum (Array_To_Sum);
+            A_HAT (I) := The_Sum_NTT_Poly_Zq.Sum (Array_To_Sum, Index_Ref'Last);
          end;
       end loop;
       return A_HAT;
