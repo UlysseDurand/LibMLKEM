@@ -106,28 +106,30 @@ is
 
     end Sum_On_Array;
 
-    package body Generic_Split_Sum is 
-        function Extract_Even (F : BigArray) return SmallArray
+    package body Generic_Split_Sum 
+        with SPARK_Mode => On
+    is 
+        function Extract_Even (F : ArrayType) return ArrayType
         is 
-            Res : SmallArray := (others => 0);
+            Res : ArrayType;
         begin
-            for I in SmallIndexRange loop
-                Res (I) := F (2 * Small_To_Big (I));
+            for I in 0 .. (F'Length / 2 - 1) loop
+                Res (IndexRange (I)) := F (IndexRange (2 * I));
             end loop;
             return Res;
         end Extract_Even;
 
-        function Extract_Odd (F : BigArray) return SmallArray
+        function Extract_Odd (F : ArrayType) return ArrayType
         is 
-            Res : SmallArray := (others => 0);
+            Res : ArrayType;
         begin
-            for I in SmallIndexRange loop
-                Res (I) := F (2 * Small_To_Big (I) + 1);
+            for I in 0 .. (F'Length / 2 - 1) loop
+                Res (IndexRange (I)) := F (IndexRange (2 * I + 1));
             end loop;
             return Res;
         end Extract_Odd;
 
-        function Lemma_Split_Odd_Even (A :  BigArray) return Boolean
+        function Lemma_Split_Odd_Even (A :  ArrayType) return Boolean
         is
             (True);
     end Generic_Split_Sum;
