@@ -69,19 +69,19 @@ is
 
         function Extract_Even (F : ArrayType;
                                Length : Integer) return ArrayType
-            with Pre => F'Range'First = 0 and Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last) + 1,
+            with Pre => Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last) + 1,
                  Post => (for all I in 0 .. (Length / 2 - 1) => Extract_Even'Result (IndexRange (I)) = F (IndexRange (2 * I)));
 
         function Extract_Odd (F : ArrayType;
                               Length : Integer) return ArrayType
-            with Pre =>  F'Range'First = 0 and Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last) + 1,
+            with Pre =>  Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last) + 1,
                  Post => (for all I in 0 .. (Length / 2 - 1) => Extract_Odd'Result (IndexRange (I)) = F (IndexRange (2 * I + 1)));
 
         package Summer is new Sum_On_Array (ElementType, IndexRange, ArrayType);
 
         function Lemma_Split_Odd_Even (A :  ArrayType;
                                        Length : Integer) return Boolean
-            with Pre => A'Range'First = 0 and Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last + 1),
+            with Pre => Length mod 2 = 0 and Length > 1 and Length <= Integer (IndexRange'Last + 1),
                  Post => Lemma_Split_Odd_Even'Result and
                          Summer.Sum (A) = Summer.Sum (Extract_Even (A, Length)) + Summer.Sum (Extract_Odd (A, Length));
 
