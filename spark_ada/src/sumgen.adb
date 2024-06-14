@@ -6,30 +6,14 @@ package body SumGen
 is
     package body Sum_On_Array is 
 
-        function Sum (A : InputType;
+        function Partial_Sum (A : InputType;
                               Max_Index : IndexRange) return ElementType
-        is (if Max_Index = 0 then A (0) else Sum (A, Max_Index - 1) + A (Max_Index));
-
-
-        function Replace_By_Zeros (X : InputType;
-                                   A : IndexRange) return InputType
-        is
-            Res : InputType;
-        begin
-            for J in IndexRange loop
-                if J > A then
-                    Res (J) := 0;
-                else
-                    Res (J) := X(J);
-                end if;
-            end loop;
-            return Res;
-        end Replace_By_Zeros;
+        is (if Max_Index = 0 then A (0) else Partial_Sum (A, Max_Index - 1) + A (Max_Index));
 
         function "+" (F : InputType;
                       G : InputType) return InputType
         is
-            Res : InputType with Relaxed_Initialization;
+            Res : InputType (0 .. F'Length) with Relaxed_Initialization;
         begin
             for I in IndexRange loop
                 Res (I) := F (I) + G (I);
@@ -40,30 +24,30 @@ is
             return Res;
         end "+";
 
-        function Lemma_Sum_Disjoint (F : InputType;
-                                             G : InputType;
-                                             Max_Index : IndexRange) return Boolean
+        function Lemma_Partial_Sum_Disjoint (F : InputType;
+                                     G : InputType;
+                                     Max_Index : IndexRange) return Boolean
         is
             H : InputType := F + G;
             Tiny_Sum_F : ElementType;
             Tiny_Sum_G : ElementType;
             Tiny_Sum_H : ElementType;
             Induction_Hypothesis : Boolean;
-            Sum_F : ElementType := Sum (F, Max_Index);
-            Sum_G : ElementType := Sum (G, Max_Index);
-            Sum_H : ElementType := Sum (H, Max_Index);
+            Sum_F : ElementType := Partial_Sum (F, Max_Index);
+            Sum_G : ElementType := Partial_Sum (G, Max_Index);
+            Sum_H : ElementType := Partial_Sum (H, Max_Index);
         begin
             if (Max_Index = 0) then
                 pragma Assert (Sum_F + Sum_G = Sum_H);
             elsif (Max_Index > 0) then
-                Tiny_Sum_F := Sum (F, Max_Index - 1); 
+                Tiny_Sum_F := Partial_Sum (F, Max_Index - 1); 
                 pragma Assert (Sum_F = Tiny_Sum_F + F (Max_Index));
-                Tiny_Sum_G := Sum (G, Max_Index - 1); 
+                Tiny_Sum_G := Partial_Sum (G, Max_Index - 1); 
                 pragma Assert (Sum_G = Tiny_Sum_G + G (Max_Index));
-                Tiny_Sum_H := Sum (H, Max_Index - 1); 
+                Tiny_Sum_H := Partial_Sum (H, Max_Index - 1); 
                 pragma Assert (Sum_H = Tiny_Sum_H + H (Max_Index));
 
-                Induction_Hypothesis := Lemma_Sum_Disjoint (F, G, Max_Index - 1);
+                Induction_Hypothesis := Lemma_Partial_Sum_Disjoint (F, G, Max_Index - 1);
 
                 pragma Assert (By (Tiny_Sum_F + Tiny_Sum_G = Tiny_Sum_H, Induction_Hypothesis));
 
@@ -93,7 +77,7 @@ is
                 pragma Assert (Sum_F + Sum_G = Sum_H);
             end if;
             return True;
-        end Lemma_Sum_Disjoint;
+        end Lemma_Partial_Sum_Disjoint;
 
         function Lemma_Add_Associative (A : ElementType;
                                         B : ElementType;
@@ -116,7 +100,7 @@ is
         function Extract_Even (F : ArrayType; 
                                Length : Integer) return ArrayType
         is 
-            Res : ArrayType (0 .. Length / 2 - 1) with Relaxed_Initialization;
+            Res : ArrayType (0 .. IndexRange (Length / 2 - 1)) with Relaxed_Initialization;
         begin
             for I in 0 .. (Length / 2 - 1) loop
                 Res (IndexRange (I)) := F (IndexRange (2 * I));
@@ -131,7 +115,7 @@ is
         function Extract_Odd (F : ArrayType;
                               Length : Integer) return ArrayType
         is 
-            Res : ArrayType with Relaxed_Initialization;
+            Res : ArrayType (0 .. IndexRange (Length / 2 - 1)) with Relaxed_Initialization;
         begin
             for I in 0 .. (Length / 2 - 1) loop
                 Res (IndexRange (I)) := F (IndexRange (2 * I + 1));
