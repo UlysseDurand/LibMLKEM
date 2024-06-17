@@ -11,9 +11,8 @@ is
 
     --  This function is meant to be recursive
     function NTT_Recurs (E : Array_Of_Zq;
-                         Psi : T_Ref;
-                         Length : Positive) return Array_Of_Zq
-        with Pre => Length <= Integer (Index_Ref'Last + 1) and
-                    Is_Pow_Of_Two (Length);
+                         Psi : T_Ref) return Array_Of_Zq
+        with Pre => ((E'First = 0 and E'Last > E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then
+                    (E'Length = 1 or Is_Pow_Of_Two (E'Length));
 
 end RecursNTT;
