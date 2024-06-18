@@ -12,11 +12,12 @@ is
    begin
       for I in Index_Ref'Range loop
          declare
-            Array_To_Sum : Variabla_Length_Poly_Zq (0 .. Index_Ref'Last);
+            function Sum_Expression (J : Index_Ref) return T_Ref is
+               (Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * A (I));
+            function Sum_Array_Generator is new The_Sum_NTT_Poly_Zq.InitialArray (Sum_Expression);
+            Array_To_Sum : Variabla_Length_Poly_Zq (0 .. Index_Ref'Last) := Sum_Array_Generator (Integer (Index_Ref'Last) + 1);
+            package Lemma_Split is new The_Sum_NTT_Poly_Zq.Generic_Lemma_Split_Sum_Func_Odd_Even (Sum_Expression); 
          begin
-            for J in Index_Ref loop
-            Array_To_Sum (J) := (Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * A (I));
-            end loop;
             A_HAT (I) := The_Sum_NTT_Poly_Zq.Sum (Array_To_Sum);
          end;
       end loop;

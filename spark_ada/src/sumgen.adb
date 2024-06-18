@@ -9,6 +9,11 @@ is
     is
         (A mod 2 = 0 and Is_Pow_Of_Two (A / 2));
 
+
+    function Compose (A : InputType) return ReturnType
+    is 
+        (F (G (A)));
+
     package body Sum_On_Array is 
 
         function Cut_Last (A : ArrayType) return ArrayType
@@ -25,10 +30,6 @@ is
             return Res;
         end Cut_Last;
 
-        function Partial_Sum (A : ArrayType;
-                              Max_Index : IndexRange) return ElementType
-        is (if Max_Index = 0 then A (0) else Partial_Sum (A, Max_Index - 1) + A (Max_Index));
-
         function "+" (F : ArrayType;
                       G : ArrayType) return ArrayType
         is
@@ -42,61 +43,6 @@ is
             end loop;
             return Res;
         end "+";
-
-        function Lemma_Partial_Sum_Disjoint (F : ArrayType;
-                                     G : ArrayType;
-                                     Max_Index : IndexRange) return Boolean
-        is
-            H : ArrayType := F + G;
-            Tiny_Sum_F : ElementType;
-            Tiny_Sum_G : ElementType;
-            Tiny_Sum_H : ElementType;
-            Induction_Hypothesis : Boolean;
-            Sum_F : ElementType := Partial_Sum (F, Max_Index);
-            Sum_G : ElementType := Partial_Sum (G, Max_Index);
-            Sum_H : ElementType := Partial_Sum (H, Max_Index);
-        begin
-            if (Max_Index = 0) then
-                pragma Assert (Sum_F + Sum_G = Sum_H);
-            elsif (Max_Index > 0) then
-                Tiny_Sum_F := Partial_Sum (F, Max_Index - 1); 
-                pragma Assert (Sum_F = Tiny_Sum_F + F (Max_Index));
-                Tiny_Sum_G := Partial_Sum (G, Max_Index - 1); 
-                pragma Assert (Sum_G = Tiny_Sum_G + G (Max_Index));
-                Tiny_Sum_H := Partial_Sum (H, Max_Index - 1); 
-                pragma Assert (Sum_H = Tiny_Sum_H + H (Max_Index));
-
-                Induction_Hypothesis := Lemma_Partial_Sum_Disjoint (F, G, Max_Index - 1);
-
-                pragma Assert (By (Tiny_Sum_F + Tiny_Sum_G = Tiny_Sum_H, Induction_Hypothesis));
-
-                pragma Assert (F (Max_Index) + G (Max_Index) = H (Max_Index));
-                pragma Assert ((Tiny_Sum_F + Tiny_Sum_G) + (F (Max_Index) + G (Max_Index)) = Tiny_Sum_H + H (Max_Index));
-                pragma Assert (By (
-                    (Tiny_Sum_F + Tiny_Sum_G) + (F (Max_Index) + G (Max_Index)) = (((Tiny_Sum_F + Tiny_Sum_G) + F (Max_Index)) + G (Max_Index)),
-                    Lemma_Add_Associative (Tiny_Sum_F + Tiny_Sum_G, F (Max_Index), G (Max_Index))
-                ));
-                pragma Assert (By (
-                    ((Tiny_Sum_F + Tiny_Sum_G) + F (Max_Index)) + G (Max_Index) = (Tiny_Sum_F + (Tiny_Sum_G + F (Max_Index))) + G (Max_Index),
-                    Lemma_Add_Associative (Tiny_Sum_F, Tiny_Sum_G, F (Max_Index))
-                ));
-                pragma Assert (By (
-                    (Tiny_Sum_F + (Tiny_Sum_G + F (Max_Index))) + G (Max_Index) = Tiny_Sum_F + (F (Max_Index)+ Tiny_Sum_G) + G (Max_Index),
-                    Lemma_Add_Commutative (F (Max_Index), Tiny_Sum_G)
-                ));
-                pragma Assert (By (
-                    Tiny_Sum_F + (F (Max_Index)+ Tiny_Sum_G) + G (Max_Index) = ((Tiny_Sum_F + F (Max_Index)) + Tiny_Sum_G) + G (Max_Index),
-                    Lemma_Add_Associative (Tiny_Sum_F, F(Max_Index), Tiny_Sum_G)
-                ));
-                pragma Assert (By (
-                    ((Tiny_Sum_F + F (Max_Index)) + Tiny_Sum_G) + G (Max_Index) = (Tiny_Sum_F + F (Max_Index)) + (Tiny_Sum_G + G (Max_Index)),
-                    Lemma_Add_Associative (Tiny_Sum_F + F (Max_Index), Tiny_Sum_G, G (Max_Index))
-                ));
-                pragma Assert ((Tiny_Sum_F + F (Max_Index))+ (Tiny_Sum_G + G (Max_Index)) = Tiny_Sum_H + H (Max_Index));
-                pragma Assert (Sum_F + Sum_G = Sum_H);
-            end if;
-            return True;
-        end Lemma_Partial_Sum_Disjoint;
 
         function Sum (A : ArrayType) return ElementType
         is
@@ -226,18 +172,28 @@ is
             return True;
         end Lemma_Sum_Extensional;
 
-    end Sum_On_Array;
-
-    package body Generic_Apply_To_Array is
-        function Apply_To_Array (X : InputTypeA) return InputTypeB
+        function InitialArray (Length : Integer) return ArrayType
         is
-            Res : InputTypeB;
+            Res : ArrayType (0 .. IndexRange (Length - 1)) with Relaxed_Initialization;
         begin
-            for I in IndexRange loop
-                Res (I) := Func (X (I));
+            for I in 0 .. IndexRange (Length - 1) loop
+                Res (I) := Func (I);
+                pragma Loop_Invariant (for all J in 0 .. I => Res (I)'Initialized);
             end loop;
             return Res;
-        end Apply_To_Array;
-    end Generic_Apply_To_Array;
+        end InitialArray;
+
+        package body Generic_Lemma_Split_Sum_Func_Odd_Even 
+            with SPARK_Mode => On
+        is
+            function Lemma_Split_Sum_Func_Odd_Even (Length : Integer) return Boolean
+            is
+            begin
+                pragma Assert (Sum (Array_Generator (Length)) = Sum (Even_Terms_Array_Generator (Length / 2)) + Sum (Odd_Terms_Array_Generator (Length / 2)));
+                return True;
+            end Lemma_Split_Sum_Func_Odd_Even;
+        end Generic_Lemma_Split_Sum_Func_Odd_Even;
+
+    end Sum_On_Array;
 
 end SumGen;
