@@ -7,8 +7,7 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
     is
-        (A mod 2 = 0 and Is_Pow_Of_Two (A / 2));
-
+        (if A = 1 then True else (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)));
 
     function Compose (A : InputType) return ReturnType
     is 
@@ -178,7 +177,7 @@ is
         begin
             for I in 0 .. IndexRange (Length - 1) loop
                 Res (I) := Func (I);
-                pragma Loop_Invariant (for all J in 0 .. I => Res (I)'Initialized);
+                pragma Loop_Invariant (for all J in 0 .. I => Res (J)'Initialized);
             end loop;
             return Res;
         end InitialArray;
@@ -189,6 +188,7 @@ is
             function Lemma_Split_Sum_Func_Odd_Even (Length : Integer) return Boolean
             is
             begin
+                pragma Assert (0 = 1);
                 pragma Assert (Sum (Array_Generator (Length)) = Sum (Even_Terms_Array_Generator (Length / 2)) + Sum (Odd_Terms_Array_Generator (Length / 2)));
                 return True;
             end Lemma_Split_Sum_Func_Odd_Even;

@@ -43,6 +43,10 @@ is
 
     use ZqRef;
 
+   type Array_Zq is array (Index_Ref range <>) of T_Ref;
+
+   package Generic_Sum is new SumGen.Sum_On_Array (T_Ref, Index_Ref, Array_Zq);
+
    function NTT_Ref (A : in Poly_Zq_Ref) return NTT_Poly_Zq_Ref;
 
 end RefMLKEM;

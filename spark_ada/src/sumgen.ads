@@ -5,7 +5,7 @@ package SumGen
 is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
-        with Pre => A > 1,
+        with Pre => A >= 1,
              Subprogram_Variant =>  (Decreases => A), 
              Annotate => (GNATprove, Always_Return);
 
