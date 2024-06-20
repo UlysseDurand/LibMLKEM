@@ -29,7 +29,7 @@ is
         pragma Assert (IndexRange'First = 0);
 
         function Cut_Last (A : ArrayType) return ArrayType
-            with Pre => A'First = 0 and A'Last > A'First,
+            with Pre => A'Length > 0,
                  Post => Cut_Last'Result'First = A'First and Cut_Last'Result'Last = A'Last - 1 and
                          (for all I in A'First .. A'Last - 1 => (
                             Cut_Last'Result (I) = A (I)
@@ -37,7 +37,7 @@ is
 
         function "+" (F : ArrayType;
                       G : ArrayType) return ArrayType
-            with Pre => F'First = 0 and F'Last >= F'First and F'First = G'First and F'Last = G'Last,
+            with Pre => F'First = G'First and F'Last = G'Last,
                  Post => "+"'Result'First = F'First and "+"'Result'Last = F'Last and
                          (for all I in F'Range => ("+"'Result (I) = F (I) + G (I)));
 
@@ -114,7 +114,8 @@ is
             
             function Lemma_Split_Sum_Func_Odd_Even (Length : Integer) return Boolean
                 with Pre => Length >= 0 and Length mod 2 = 0,
-                     Post => Sum (Array_Generator (Length)) = Sum (Even_Terms_Array_Generator (Length / 2)) +
+                     Post => Lemma_Split_Sum_Func_Odd_Even'Result and
+                             Sum (Array_Generator (Length)) = Sum (Even_Terms_Array_Generator (Length / 2)) +
                                                               Sum (Odd_Terms_Array_Generator (Length / 2));
 
         end Generic_Lemma_Split_Sum_Func_Odd_Even;

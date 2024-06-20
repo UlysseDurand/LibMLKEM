@@ -26,6 +26,7 @@ is
                                             Res(J) = A(J)
                                        ));
             end loop;
+            pragma Assert (for all J in A'First .. A'Last - 1 => (Res (J) = A (J)));
             return Res;
         end Cut_Last;
 
@@ -36,10 +37,11 @@ is
         begin
             for I in F'Range loop
                 Res (I) := F (I) + G (I);
-                pragma Loop_Invariant (for all J in 0 .. I => 
+                pragma Loop_Invariant (for all J in F'First .. I => 
                                         Res(J)'Initialized and then 
                                         (Res (J) = F (J) + G (J)));
             end loop;
+            pragma Assert (for all J in F'Range => Res (J) = F (J) + G (J));
             return Res;
         end "+";
 
@@ -111,6 +113,8 @@ is
                     pragma Assert (for all I in Even_B'First .. Even_B'Last => (
                         Cut_Last (Even_A) (I) = Even_B (I)
                     ));
+                    pragma Assert (Cut_Last (Even_A)'First = Even_B'First);
+                    pragma Assert (Cut_Last (Even_A)'Last = Even_B'Last);
                     pragma Assert (Cut_Last (Even_A) = Even_B);
                     pragma Assert (By (Sum (Cut_Last (Even_A)) = Sum (Even_B), Lemma_Sum_Extensional (Cut_Last (Even_A), Even_B)));
                     pragma Assert (Even_A (Even_A'Last) = A (A'Last - 1));

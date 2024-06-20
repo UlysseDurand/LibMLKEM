@@ -1,21 +1,27 @@
+
 package body RefMLKEM 
     with SPARK_Mode => On
 is
-   function NTT_Ref (A : in Poly_Zq_Ref) return NTT_Poly_Zq_Ref
+--  Length has to be equal to Integer (Index256'Last) + 1 in function calls.
+--  Psi has to be equal to a 256 primary root of the unity like 17.
+function NTT_Ref (E : Array_Zq;
+                  Psi : T_Ref) return Array_Zq
    is
-      A_HAT : NTT_Poly_Zq_Ref;
+      E_HAT : Array_Zq (E'Range) with Relaxed_Initialization;
    begin
-      for I in Index_Ref'Range loop
+      for I in E'Range loop
          declare
-            Array_To_Sum : Array_Zq (Index_Ref'Range);
+            Array_To_Sum : Array_Zq (E'Range) with Relaxed_Initialization;
          begin
-            for J in Index_Ref loop
-               Array_To_Sum (J) := (Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * A (I));
+            for J in E'Range loop
+               Array_To_Sum (J) := (Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * E (I));
+               pragma Loop_Invariant (for all K in E'First .. J => Array_To_Sum (K)'Initialized);
             end loop;
-            A_HAT (I) := Generic_Sum.Sum (Array_To_Sum);
+            E_HAT (I) := Generic_Sum.Sum (Array_To_Sum);
+            pragma Assume (for all K in E'First .. I => E_HAT (K)'Initialized);
          end;
       end loop;
-      return A_HAT;
+      return E_HAT;
    end NTT_Ref;
 end RefMLKEM;
 
