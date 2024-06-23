@@ -27,34 +27,64 @@ is
                 B_Recurs : Array_Zq (0 .. Mid_Dex) := NTT_Recurs (E_Odd, Psi_Square);
                 A_Ref : Array_Zq (0 .. Mid_Dex) := NTT_Ref (E_Even, Psi_Square);
                 B_Ref : Array_Zq (0 .. Mid_Dex) := NTT_Ref (E_Odd, Psi_Square);
-                
+                B_Bis : Array_Zq (A_Recurs'Range) with Relaxed_Initialization; 
             begin
+                for J in 0 .. Num_Mid - 1 loop
+                    declare
+                        J_Dex : Index_Ref := Index_Ref (J);
+                        begin
+                            B_Bis (J_Dex) := Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                        end;
+                end loop;
+                pragma Assume (B_Bis'Initialized);
+
                 pragma Assert (A_Recurs = A_Ref);
                 pragma Assert (B_Recurs = B_Ref);
 
                 for J in 0 .. Num_Mid - 1 loop
+
+                    Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                    Res (J_Dex + Mid_Dex) := A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                    -- Then we have to prove that Res (J) = The right expression
+
                     declare
                         J_Dex : Index_Ref := Index_Ref (J);
-                        AJ_Bis1 : Array_Zq (A_Recurs'Range) with Relaxed_Initialization;
-                        BJ_Bis1 : Array_Zq (A_Recurs'Range) with Relaxed_Initialization;
-                        BJ_Bis2 : Array_Zq (A_Recurs'Range) with Relaxed_Initialization;
                         J_Bis : T_Ref := J + Num_Mid;
+
+                        AJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
+                        BJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
+                        BJ_Bis_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
                     begin
-                        for K in 0 .. Mid_Dex loop
+                        for I in 0 .. Mid_Dex loop
                             declare
-                                K_Dex : Index_Ref (K);
+                                I_Dex : Index_Ref := Index_Ref (I);
                             begin
-                                B_Bis (K) := Psi_Square ** (J + Num_Mid + 1) * B_Recurs (K);
                             end;
                         end loop;
-                        pragma Assert (B_Bis'Initialized);
 
-                        Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex);
-                        Res (J_Dex + Mid_Dex) := A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                        for I in 0 .. Mid_Dex loop
+                            declare
+                                I_Dex : Index_Ref := Index_Ref (I);
+                            begin
+                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Even (I_Dex));
+                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Even (I_Dex));
+                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (2 * To_Even (I) * J + To_Even (I)) * E_Even (I_Dex));
+
+                                pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Odd (I_Dex));
+                                pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Odd (I_Dex));
+                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (2 * J + 1) * Psi ** (4 * I * J + 2 * I) * E_Odd(I_Dex));
+                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (4 * U * J + 2 * I + 2 * J + 1) * E_Odd (I_Dex));
+                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (2 * To_Odd (I) * J + To_Odd (I)) * E_Odd (I_Dex));
+                            end;
+                        end loop;
+
+                        pragma Assert (A_Recurs (J_Dex) = Generic_Sum.Sum (AJ_Recurs_Sum_Term));
+                        pragma Assert (B_Recurs (J_Dex) = Generic_Sum.Sum (BJ_Recurs_Sum_Term));
+                        pragma Assert (B_Bis (J_Dex) = Generic_Sum.Sum (BJ_Bis_Sum_Term));
 
                         pragma Assert (Res (J_Dex) = A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex));
-
                         pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex));
+
                         pragma Assert (By (
                             A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex) = A_Recurs (J_Dex) + (-1) * (Psi ** (2 * J + 1) * B_Recurs (J_Dex)),
                             Lemma_Minus_Factor (A_Recurs (J_Dex), Psi ** (2 * J + 1) * B_Recurs (J_Dex))
@@ -70,13 +100,12 @@ is
                         ));
                         pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi_Square ** (Num_Mid + J + 1) * B_Recurs (J_Dex)));
 
-                        -- A_Ref = A_Bis1 et B_Ref = B_Bis1
-
+                        -- Res (J)
                         -- = \sum n/2 | (psi^2)^(2ij+i) * e_even(i) + psi^(2j+1) \sum n/2 | (psi^2)^(2ij+i) * e_odd(i)   === A_Ref | B_Ref
-                        -- = \sum n/2 | psi^(4ij+2i) * e_even(i) + psi^(2j+1) \sum n/2 | psi^(4ij+2i) * e_odd(i)         === A_Bis1 | B_Bis1
-                        -- = \sum n/2 | psi^(4ij+2i) * e_even(i) + \sum n/2 | psi^(4ij+2j+2i+1) * e_odd(i)               === A_Bis1 | B_Bis2
-                        -- = \sum n/2 | psi^(4ij+2i) * e (2i) + \sum n/2 | psi^(4ij+2j+2i+1) * e (2i+1)                  === A_Bis1 | B_Bis2
-                        -- = \sum n/2 | psi^(2(2i)j+(2i)) * e_even (i) + \sum n/2 | psi^(2(2i+1)j+(2i+1)) * e_odd (i)    === A_Bis1 | B_Bis2
+                        -- = \sum n/2 | psi^(4ij+2i) * e_even(i) + psi^(2j+1) \sum n/2 | psi^(4ij+2i) * e_odd(i)         === A_Ref | B_Ref
+                        -- = \sum n/2 | psi^(4ij+2i) * e_even(i) + \sum n/2 | psi^(4ij+2j+2i+1) * e_odd(i)               === A_Ref | BJ_Bis
+                        -- = \sum n/2 | psi^(4ij+2i) * e (2i) + \sum n/2 | psi^(4ij+2j+2i+1) * e (2i+1)                  === A_Ref | BJ_Bis
+                        -- = \sum n/2 | psi^(2(2i)j+(2i)) * e_even (i) + \sum n/2 | psi^(2(2i+1)j+(2i+1)) * e_odd (i)    === A_Ref | BJ_Bis
                         --   \sum n | psi^(2ij+i) * e (i)                                                                === Res
 
                     end;
