@@ -91,19 +91,20 @@ is
             with Pre => Length >= 0 and Integer (IndexRange'Last) + 1 >= Length,
                  Post => (for all I in 0 .. IndexRange (Length - 1) => InitialArray'Result (I) = Func (I)); 
 
+        function To_Even (I : IndexRange) return IndexRange
+        is
+            (2 * I);
+
+        function To_Odd (I : IndexRange) return IndexRange
+        is
+            (2 * I + 1);
+
         generic 
             with function Func (I : IndexRange) return ElementType; 
         package Generic_Lemma_Split_Sum_Func_Odd_Even
             with SPARK_Mode => On
         is
 
-            function To_Even (I : IndexRange) return IndexRange
-            is
-                (2 * I);
-
-            function To_Odd (I : IndexRange) return IndexRange
-            is
-                (2 * I + 1);
 
             function Even_Func is new Compose (IndexRange, IndexRange, ElementType, Func, To_Even);
             function Odd_Func is new Compose (IndexRange, IndexRange, ElementType, Func, To_Odd);
