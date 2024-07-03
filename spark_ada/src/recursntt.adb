@@ -19,7 +19,7 @@ is
         else
             declare 
                 Num_Mid : Integer := E'Length / 2;
-                Mid_Dex : Index_Ref := Index_Range (Num_Mid); 
+                Mid_Dex : Index_Ref := Index_Ref (Num_Mid); 
                 E_Even : Array_Zq (0 .. Mid_Dex) := Generic_Sum.Extract_Even (E);
                 E_Odd : Array_Zq (0 .. Mid_Dex) := Generic_Sum.Extract_Odd (E);
                 Psi_Square : T_Ref := Psi * Psi;
@@ -43,44 +43,38 @@ is
 
                 for J in 0 .. Num_Mid - 1 loop
 
-                    Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex);
-                    Res (J_Dex + Mid_Dex) := A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex);
-                    -- Then we have to prove that Res (J) = The right expression
-
                     declare
                         J_Dex : Index_Ref := Index_Ref (J);
-                        J_Bis : T_Ref := J + Num_Mid;
+                        J_Bis : T_Ref := T_Ref (J + Num_Mid);
 
                         AJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
                         BJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
                         BJ_Bis_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
                     begin
-                        for I in 0 .. Mid_Dex loop
-                            declare
-                                I_Dex : Index_Ref := Index_Ref (I);
-                            begin
-                            end;
-                        end loop;
 
-                        for I in 0 .. Mid_Dex loop
+                        Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                        Res (J_Dex + Mid_Dex) := A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                        -- Then we have to prove that Res (J) = The right expression
+
+                        for I in 0 .. Num_Mid loop
                             declare
                                 I_Dex : Index_Ref := Index_Ref (I);
                             begin
                                 pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Even (I_Dex));
                                 pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Even (I_Dex));
-                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (2 * To_Even (I) * J + To_Even (I)) * E_Even (I_Dex));
+                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (2 * Integer (Generic_Sum.To_Even (I_Dex)) * J + Integer (Generic_Sum.To_Even (I_Dex))) * E_Even (I_Dex));
 
                                 pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Odd (I_Dex));
                                 pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Odd (I_Dex));
-                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (2 * J + 1) * Psi ** (4 * I * J + 2 * I) * E_Odd(I_Dex));
-                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (4 * U * J + 2 * I + 2 * J + 1) * E_Odd (I_Dex));
-                                pragma Assert (BJ_Bis_Sum_Term (I_Dex) = Psi ** (2 * To_Odd (I) * J + To_Odd (I)) * E_Odd (I_Dex));
+                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (2 * J + 1) * Psi ** (4 * I * J + 2 * I) * E_Odd(I_Dex));
+                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I + 2 * J + 1) * E_Odd (I_Dex));
+                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (2 * Integer (Generic_Sum.To_Odd (I_Dex)) * J + Integer (Generic_Sum.To_Odd (I_Dex))) * E_Odd (I_Dex));
                             end;
                         end loop;
 
                         pragma Assert (A_Recurs (J_Dex) = Generic_Sum.Sum (AJ_Recurs_Sum_Term));
                         pragma Assert (B_Recurs (J_Dex) = Generic_Sum.Sum (BJ_Recurs_Sum_Term));
-                        pragma Assert (B_Bis (J_Dex) = Generic_Sum.Sum (BJ_Bis_Sum_Term));
+                        pragma Assert (B_Bis (J_Dex) = Generic_Sum.Sum (BJ_Bis_Recurs_Sum_Term));
 
                         pragma Assert (Res (J_Dex) = A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex));
                         pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex));
