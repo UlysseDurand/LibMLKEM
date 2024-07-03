@@ -175,12 +175,14 @@ is
             return True;
         end Lemma_Sum_Extensional;
 
-        function InitialArray (Length : Integer) return ArrayType
+        function InitialArray (Param1 : Type1;
+                               Param2 : Type2;
+                               Length : Integer) return ArrayType
         is
             Res : ArrayType (0 .. IndexRange (Length - 1)) with Relaxed_Initialization;
         begin
             for I in 0 .. IndexRange (Length - 1) loop
-                Res (I) := Func (I);
+                Res (I) := Func (Param1, Param2, I);
                 pragma Loop_Invariant (for all J in 0 .. I => Res (J)'Initialized);
             end loop;
             return Res;

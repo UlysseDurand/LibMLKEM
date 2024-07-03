@@ -86,6 +86,8 @@ is
                  Post => Lemma_Sum_Extensional'Result and Sum (A) = Sum (B);
 
         generic
+            type Type1 is private;
+            type Type2 is private;
             with function Func (I : IndexRange) return ElementType;
         function InitialArray (Length : Integer) return ArrayType
             with Pre => Length >= 0 and Integer (IndexRange'Last) + 1 >= Length,

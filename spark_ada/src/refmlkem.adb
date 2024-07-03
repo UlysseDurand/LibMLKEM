@@ -4,8 +4,11 @@ package body RefMLKEM
 is
 --  Length has to be equal to Integer (Index256'Last) + 1 in function calls.
 --  Psi has to be equal to a 256 primary root of the unity like 17.
-function NTT_Ref (E : Array_Zq;
-                  Psi : T_Ref) return Array_Zq
+   function NTT_Inner (E : Array_Zq;
+                       Psi : T_Ref;
+                       J : Index_Ref) return T_Ref
+   function NTT_Ref (E : Array_Zq;
+                     Psi : T_Ref) return Array_Zq
    is
       E_HAT : Array_Zq (E'Range) with Relaxed_Initialization;
    begin
