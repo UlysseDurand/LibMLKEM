@@ -19,10 +19,6 @@ is
 
         type Index_Ref is range 0 .. 255;
 
-        function Index_Ref_To_Big (A : Index_Ref) return Big_Integer
-        is
-            (To_Big_Integer (Integer (A)));
-
         type Array_Zq is array (Index_Ref range <>) of T_Ref;
 
         type Poly_Zq_Ref is array (Index_Ref) of T_Ref;
@@ -49,7 +45,9 @@ is
 
         function "**" (A : T_Ref ;
                        B : Big_Natural) return T_Ref
-            with Subprogram_Variant => (Decreases => B);
+            with Post => "**"'Result = (if B = 0 then 1 else A * (A ** (B - 1))) and
+                         (if (Is_Valid (B)) then "**"'Result = A ** (To_Integer (B))),
+                 Subprogram_Variant => (Decreases => B);
 
         function "**" (A : T_Ref ;
                        B : Big_Natural) return T_Ref
@@ -62,6 +60,15 @@ is
 
 
    package Generic_Sum is new Sum_On_Array (T_Ref, Index_Ref, Array_Zq);
+
+   function NTT_Very_Inner_Ref (E : Array_Zq; Psi : T_Ref; J : Index_Ref; I : Index_Ref) return T_Ref 
+      with Pre => (I in E'Range),
+           Post => NTT_Very_Inner_Ref'Result = Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * E (I);
+   function Array_Generator_Very_Inner is new Generic_Sum.InitialArray (NTT_Very_Inner_Ref);
+
+   function NTT_Inner_Ref (E : Array_Zq; Psi : T_Ref; Useless : Index_Ref; J : Index_Ref) return T_Ref;
+
+   function Array_Generator_Inner is new Generic_Sum.InitialArray (NTT_Inner_Ref);
 
     function NTT_Ref (E : Array_Zq;
                       Psi : T_Ref) return Array_Zq

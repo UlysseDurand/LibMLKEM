@@ -8,15 +8,15 @@ package RecursNTT
     with SPARK_Mode => On
 is
 
-    package Generic_Sum is new Sum_On_Array (T_Ref, Index_Ref, Array_Zq);
-
     --  This function is meant to be recursive
     function NTT_Recurs (E : Array_Zq;
                          Psi : T_Ref) return Array_Zq
-        with Pre => (Psi ** E'Length / 2 = -1 and
+        with Pre => (Psi ** E'Length / 2 = - 1 and
                     (E'First = 0 and E'Last >= E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then  
                     (E'Length = 1 or Is_Pow_Of_Two (E'Length)),
-             Post => NTT_Recurs'Result'First = E'First and NTT_Recurs'Result'Last = E'Last;
+             Post => NTT_Recurs'Result'First = E'First and NTT_Recurs'Result'Last = E'Last,
+             Subprogram_Variant => (Decreases => E'Length),
+             Annotate => (GNATprove, Always_Return);
 
     function Lemma_Minus_Factor (X : T_Ref;
                                  Y : T_Ref) return Boolean
@@ -30,10 +30,17 @@ is
                      (X * Y) * Z = X * (Y * Z);
 
     function Lemma_Pow_Additive (X : T_Ref;
-                                 A : Integer;
-                                 B : Integer) return Boolean
-        with Pre => A >=0 and B >= 0 and A < Integer'Last / 2 and B < Integer'Last / 2, 
+                                 A : Big_Integer;
+                                 B : Big_Integer) return Boolean
+        with Pre => A >=0 and B >= 0,
              Post => Lemma_Pow_Additive'Result and
                      (X ** A) * (X ** B) = X ** (A + B);
+
+    function Lemma_Pow_Mult (X : T_ref;
+                             A : Big_Integer;
+                             B : Big_Integer) return Boolean
+        with Pre => A >= 0 and B >= 0,
+             Post => Lemma_Pow_Mult'Result and
+                     ((X ** A) ** B = X ** (A * B));
 
 end RecursNTT;

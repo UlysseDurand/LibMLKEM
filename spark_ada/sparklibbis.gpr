@@ -1,6 +1,5 @@
 --  PUT HERE YOUR SPARKlib INSTALLATION PATH
-project SPARKlibbis extends "/Users/ulyssedurand/.alire/gnatprove_13.2.1_d088f8a1/lib/gnat/sparklib.gpr" is
-
+project SPARKlibbis extends "/home/Durand/installs/gnatprove_13.2.1_28fc3583/lib/gnat/sparklib.gpr" is
    -- This project is not supposed to be used directly. Instead, copy it in
    -- your code and provide appropriate values for the object directory
    -- Object_Dir (so that compilation and artifacts are generated in

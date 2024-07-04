@@ -1,32 +1,31 @@
 with SumGen; use SumGen;
 with SPARK.Cut_Operations; use SPARK.Cut_Operations;
 with RefMLKEM; use RefMLKEM.ZqRef;
+use RefMLKEM;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 
 package body RecursNTT
     with SPARK_Mode => On
 is
 
-
-
     function NTT_Recurs (E : Array_Zq;
                          Psi : T_Ref) return Array_Zq
     is
-        Res : Array_Zq (0 .. Index_Ref (E'Length - 1)) with Relaxed_Initialization;
+        Res : Array_Zq (E'Range) with Relaxed_Initialization;
+        Num_Mid : Integer := E'Length / 2;
+        Mid_Dex : Index_Ref := Index_Ref (Num_Mid); 
     begin
         if E'Length = 1 then
             Res (0) := E (0);
         else
             declare 
-                Num_Mid : Integer := E'Length / 2;
-                Mid_Dex : Index_Ref := Index_Ref (Num_Mid); 
-                E_Even : Array_Zq (0 .. Mid_Dex) := Generic_Sum.Extract_Even (E);
-                E_Odd : Array_Zq (0 .. Mid_Dex) := Generic_Sum.Extract_Odd (E);
-                Psi_Square : T_Ref := Psi * Psi;
-                A_Recurs : Array_Zq (0 .. Mid_Dex) := NTT_Recurs (E_Even, Psi_Square);
-                B_Recurs : Array_Zq (0 .. Mid_Dex) := NTT_Recurs (E_Odd, Psi_Square);
-                A_Ref : Array_Zq (0 .. Mid_Dex) := NTT_Ref (E_Even, Psi_Square);
-                B_Ref : Array_Zq (0 .. Mid_Dex) := NTT_Ref (E_Odd, Psi_Square);
+                E_Even : Array_Zq (0 .. E'Length / 2 - 1) := Generic_Sum.Extract_Even (E);
+                E_Odd : Array_Zq (0 .. E'Length / 2 - 1) := Generic_Sum.Extract_Odd (E);
+                Psi_Square : T_Ref := Psi ** To_Big_Integer (2);
+                A_Recurs : Array_Zq (0 .. E'Length / 2 - 1) := NTT_Recurs (E_Even, Psi_Square);
+                B_Recurs : Array_Zq (0 .. E'Length / 2 - 1) := NTT_Recurs (E_Odd, Psi_Square);
+                A_Ref : Array_Zq (0 .. E'Length / 2 - 1) := NTT_Ref (E_Even, Psi_Square);
+                B_Ref : Array_Zq (0 .. E'Length / 2 - 1) := NTT_Ref (E_Odd, Psi_Square);
                 B_Bis : Array_Zq (A_Recurs'Range) with Relaxed_Initialization; 
             begin
                 for J in 0 .. Num_Mid - 1 loop
@@ -42,41 +41,82 @@ is
                 pragma Assert (B_Recurs = B_Ref);
 
                 for J in 0 .. Num_Mid - 1 loop
-
                     declare
                         J_Dex : Index_Ref := Index_Ref (J);
                         J_Bis : T_Ref := T_Ref (J + Num_Mid);
+                        J_Big : Big_Integer := To_Big (J_Dex);
 
-                        AJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
-                        BJ_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
-                        BJ_Bis_Recurs_Sum_Term : Array_Zq (0 .. Mid_Dex);
+                        A_J_Recurs_Very_Inner : Array_Zq (0 .. E'Length / 2 - 1) with Relaxed_Initialization;
+                        B_J_Recurs_Very_Inner : Array_Zq (0 .. E'Length / 2 - 1) with Relaxed_Initialization;
+                        B_Bis_J_Recurs_Very_Inner : Array_Zq (0 .. E'Length / 2 - 1) with Relaxed_Initialization;
                     begin
-
-                        Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex);
+                        Res (J_Dex) := A_Recurs (J_Dex) + Psi ** (2 * J_Big + 1) * B_Recurs (J_Dex);
                         Res (J_Dex + Mid_Dex) := A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex);
-                        -- Then we have to prove that Res (J) = The right expression
 
                         for I in 0 .. Num_Mid loop
                             declare
                                 I_Dex : Index_Ref := Index_Ref (I);
+                                I_Big : Big_Integer := To_Big (I_Dex);
                             begin
-                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Even (I_Dex));
-                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Even (I_Dex));
-                                pragma Assert (AJ_Recurs_Sum_Term (I_Dex) = Psi ** (2 * Integer (Generic_Sum.To_Even (I_Dex)) * J + Integer (Generic_Sum.To_Even (I_Dex))) * E_Even (I_Dex));
+                                pragma Assert (By(
+                                    (Psi ** To_Big_Integer (2)) ** (2 * I_Big * J_Big + I_Big) = Psi ** (2 * (2 * I_Big * J_Big + I_Big)), 
+                                    Lemma_Pow_Mult (Psi, To_Big_Integer (2), 2 * I_Big * J_Big + I_Big)
+                                ));
 
-                                pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Odd (I_Dex));
-                                pragma Assert (BJ_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Odd (I_Dex));
-                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (2 * J + 1) * Psi ** (4 * I * J + 2 * I) * E_Odd(I_Dex));
-                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (4 * I * J + 2 * I + 2 * J + 1) * E_Odd (I_Dex));
-                                pragma Assert (BJ_Bis_Recurs_Sum_Term (I_Dex) = Psi ** (2 * Integer (Generic_Sum.To_Odd (I_Dex)) * J + Integer (Generic_Sum.To_Odd (I_Dex))) * E_Odd (I_Dex));
+                                A_J_Recurs_Very_Inner (I_Dex) := NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex);
+                                -- ...
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = Psi_Square ** (2 * I_Big * J_Big + I_Big) * E_Even (I_Dex));
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I_Big * J_Big + I_Big)) * E_Even (I_Dex));
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I) * J + (2 * I)) * E_Even (I_Dex));
+                                pragma Assert (E_Even (I_Dex) = E (2 * I_Dex));
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I_Big) * J_Big + (2 * I_Big)) * E (2 * I_Dex));
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I_Big) * J_Big + (2 * I_Big)) * E (2 * I_Dex));
+                                pragma Assume (Psi ** (2 * (2 * I_Big) * J_Big + (2 * I_Big)) * E (2 * I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex, 2 * I_Dex));
+                                -- ...
+                                pragma Assert (A_J_Recurs_Very_Inner (I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex, 2 * I_Dex));
+
+                                B_J_Recurs_Very_Inner (I_Dex) := NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex);
+                                pragma Assert (B_J_Recurs_Very_Inner (I_Dex) = Psi_Square ** (2 * I_Big * J_Big + I_Big) * E_Odd (I_Dex));
+                                pragma Assume (B_J_Recurs_Very_Inner (I_Dex) = Psi_Square ** (2 * I * J + I) * E_Odd (I_Dex));
+                                pragma Assert (B_J_Recurs_Very_Inner (I_Dex) = Psi ** (4 * I * J + 2 * I) * E_Odd (I_Dex));
+
+                                B_Bis_J_Recurs_Very_Inner (I_Dex) := Psi ** (2 * J + 1) * B_J_Recurs_Very_Inner (I_Dex);
+                                -- ...
+                                pragma Assume (B_Bis_J_Recurs_Very_Inner (I_Dex) = (Psi ** (2 * J + 1)) * Psi ** (4 * I * J + 2 * I) * E_Odd(I_Dex));
+                                --  pragma Assert (By(
+                                --      Psi ** (2 * J + 1) * Psi ** (4 * I * J + 2 * I) = Psi ** (2 * J + 1 + 4 * I  * J + 2 * I), 
+                                --      Lemma_Pow_Additive (Psi, 2 * J + 1, 4 * I * J + 2 * I)
+                                --  ));
+                                pragma Assume (B_Bis_J_Recurs_Very_Inner (I_Dex) = Psi ** (4 * I * J + 2 * I + 2 * J + 1) * E_Odd (I_Dex));
+                                pragma Assert (B_Bis_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I + 1) * J + (2 * I + 1)) * E_Odd (I_Dex));
+                                pragma Assert (E_Odd (I_Dex) = E (2 * I_Dex + 1));
+                                pragma Assert (B_Bis_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I + 1) * J + (2 * I + 1)) * E (2 * I_Dex + 1));
+                                pragma Assert (B_Bis_J_Recurs_Very_Inner (I_Dex) = Psi ** (2 * (2 * I_Big + 1) * J_Big + (2 * I_Big + 1)) * E (2 * I_Dex + 1));
+                                pragma Assert (Psi ** (2 * I_Big * J_Big + I_Big) * E (I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex, I_Dex));
+                                pragma Assume (Psi ** (2 * (2 * I_Big + 1) * J_Big + (2 * I_Big + 1)) * E (2 * I_Dex + 1) = NTT_Very_Inner_Ref (E, Psi, J_Dex, 2 * I_Dex + 1));
+                                -- ...
+                                pragma Assert (B_Bis_J_Recurs_Very_Inner (I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex, 2 * I_Dex + 1));
                             end;
                         end loop;
 
-                        pragma Assert (A_Recurs (J_Dex) = Generic_Sum.Sum (AJ_Recurs_Sum_Term));
-                        pragma Assert (B_Recurs (J_Dex) = Generic_Sum.Sum (BJ_Recurs_Sum_Term));
-                        pragma Assert (B_Bis (J_Dex) = Generic_Sum.Sum (BJ_Bis_Recurs_Sum_Term));
+
+                        -- Because A_Recurs = A_Ref and A_Ref (J) = Sum (NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex))
+                        pragma Assert (A_Recurs (J_Dex) = Generic_Sum.Sum (A_J_Recurs_Very_Inner));
+                        -- Same for B
+                        pragma Assert (B_Recurs (J_Dex) = Generic_Sum.Sum (B_J_Recurs_Very_Inner));
+                        
+                        pragma Assert (B_Bis (J_Dex) = Generic_Sum.Sum (B_Bis_J_Recurs_Very_Inner));
+                        pragma Assert (B_Bis (J_Dex) = Psi ** (2 * J + 1) * B_Recurs (J_Dex));
 
                         pragma Assert (Res (J_Dex) = A_Recurs (J_Dex) + Psi ** (2 * J + 1) * B_Recurs (J_Dex));
+
+                        pragma Assert (Res (J_Dex) = A_Recurs (J_Dex) + B_Bis (J_Dex));
+                        -- for all I_Dex, Array_Generator_Very_Inner (E, Psi, J_Dex) (I_Dex) = B_Bis_J_Recurs_Very_Inner (I_Dex) + A_J_Recurs_Very_Inner (I_Dex)
+                        pragma Assert (Res (J_Dex) = Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J_Dex)));
+                        pragma Assert (Res (J_Dex) = NTT_Inner_Ref (E, Psi, 0, J_Dex));
+                        pragma Assert (Res (J_Dex) = NTT_Ref (E, Psi) (J_Dex));
+                        -- Et Voilà
+
                         pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) - Psi ** (2 * J + 1) * B_Recurs (J_Dex));
 
                         pragma Assert (By (
@@ -87,10 +127,10 @@ is
                             Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (-1) * Psi ** (2 * J + 1) * B_Recurs (J_Dex), 
                             Lemma_Mult_Associative (-1, Psi ** (2 * J + 1), B_Recurs (J_Dex))
                         ));
-                        pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi ** (E'Length) * Psi ** (2 * J + 1) * B_Recurs (J_Dex)));
+                        pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi ** To_Big_Integer (E'Length) * Psi ** (2 * To_Big (J_Dex) + 1) * B_Recurs (J_Dex)));
                         pragma Assert (By (
-                            Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi ** (E'Length + 2 * J + 1) * B_Recurs (J_Dex)), 
-                            Lemma_Pow_Additive (Psi, E'Length, 2 * J + 1)
+                            Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi ** (To_Big_Integer (E'Length) + 2 * To_Big (J_Dex) + 1) * B_Recurs (J_Dex)), 
+                            Lemma_Pow_Additive (Psi, To_Big_Integer (E'Length), 2 * To_Big (J_Dex) + 1)
                         ));
                         pragma Assert (Res (J_Dex + Mid_Dex) = A_Recurs (J_Dex) + (Psi_Square ** (Num_Mid + J + 1) * B_Recurs (J_Dex)));
 
@@ -103,8 +143,8 @@ is
                         --   \sum n | psi^(2ij+i) * e (i)                                                                === Res
 
                     end;
-                    
                 end loop;
+                pragma Assert (0 = 1);
                 pragma Assume (for all J in 0 .. (E'Length - 1) => Res (Index_Ref (J))'Initialized);
             end;
         end if;
@@ -131,13 +171,22 @@ is
     end Lemma_Mult_Associative;
 
     function Lemma_Pow_Additive (X : T_Ref;
-                                 A : Integer;
-                                 B : Integer) return Boolean
+                                 A : Big_Integer;
+                                 B : Big_Integer) return Boolean
     is 
     begin
         pragma Assume (X ** (A + B) = (X ** A) * (X ** B));
         return True;
     end Lemma_Pow_Additive;
+
+    function Lemma_Pow_Mult (X : T_ref;
+                             A : Big_Integer;
+                             B : Big_Integer) return Boolean
+    is
+    begin
+        pragma Assume ((X ** A) ** B = X ** (A * B));
+        return True;
+    end Lemma_Pow_Mult;
 
 
 end RecursNTT;

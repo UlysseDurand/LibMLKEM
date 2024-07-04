@@ -9,13 +9,6 @@ is
              Subprogram_Variant =>  (Decreases => A), 
              Annotate => (GNATprove, Always_Return);
 
-    generic
-        type InputType is private;
-        type IntermediateType is private;
-        type ReturnType is private;
-        with function F (B : IntermediateType) return ReturnType;
-        with function G (A : InputType) return IntermediateType;
-    function Compose (A : InputType) return ReturnType;
     
     generic 
         type ElementType is mod <>;
@@ -42,8 +35,7 @@ is
                          (for all I in F'Range => ("+"'Result (I) = F (I) + G (I)));
 
         function Sum (A : ArrayType) return ElementType
-            with Pre => (A'First = 0 and A'Last >= A'First),
-                 Subprogram_Variant => (Decreases => A'Length),
+            with Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return);
             
         function Lemma_Add_Associative (A : ElementType;
@@ -58,21 +50,21 @@ is
                          A + B = B + A;
 
         function Extract_Even (F : ArrayType) return ArrayType
-            with Pre => F'First = 0 and F'Last >= F'First and F'Length mod 2 = 0 and F'Length > 1,
+            with Pre => F'First = 0 and F'Length mod 2 = 0 and F'Length > 1,
                  Post => Extract_Even'Result'First = 0 and Extract_Even'Result'Length = F'Length / 2 and 
-                         (for all I in 0 .. (F'Length / 2 - 1) => 
+                         (for all I in Extract_Even'Result'Range => 
                             Extract_Even'Result (IndexRange (I)) = F (IndexRange (2 * I))
                          );
 
         function Extract_Odd (F : ArrayType) return ArrayType
-            with Pre => F'First = 0 and F'Last >= F'First and F'Length mod 2 = 0 and F'Length > 1,
+            with Pre => F'First = 0 and F'Length mod 2 = 0 and F'Length > 1,
                  Post => Extract_Odd'Result'First = 0 and Extract_Odd'Result'Length = F'Length / 2 and 
-                         (for all I in 0 .. (F'Length / 2 - 1) => 
+                         (for all I in Extract_Odd'Result'Range => 
                             Extract_Odd'Result (IndexRange (I)) = F (IndexRange (2 * I + 1))
                          );
 
         function Lemma_Split_Odd_Even (A :  ArrayType) return Boolean
-            with Pre => A'First = 0 and A'Last >= A'First and A'Length mod 2 = 0 and A'Length > 1,
+            with Pre => A'First = 0 and A'Length mod 2 = 0 and A'Length > 1,
                  Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return),
                  Post => Lemma_Split_Odd_Even'Result and
@@ -80,46 +72,65 @@ is
 
         function Lemma_Sum_Extensional (A : ArrayType;
                                         B : ArrayType) return Boolean
-            with Pre => A = B and A'First = 0 and B'First = 0 and A'Last >= A'First and B'Last >= B'First,
+            with Pre => A = B,
                  Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return),
                  Post => Lemma_Sum_Extensional'Result and Sum (A) = Sum (B);
 
         generic
-            type Type1 is private;
-            type Type2 is private;
-            with function Func (I : IndexRange) return ElementType;
-        function InitialArray (Length : Integer) return ArrayType
-            with Pre => Length >= 0 and Integer (IndexRange'Last) + 1 >= Length,
-                 Post => (for all I in 0 .. IndexRange (Length - 1) => InitialArray'Result (I) = Func (I)); 
+            with function F (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; B : IndexRange) return ElementType;
+            with function G (A : IndexRange) return IndexRange;
+        function Compose (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; A : IndexRange) return ElementType;
 
+        generic
+            with function Func (Param1 : ArrayType;
+                                Param2 : ElementType;
+                                Param3 : IndexRange;
+                                I : IndexRange) return ElementType;
+        function InitialArray (Param1 : ArrayType;
+                               Param2 : ElementType;
+                               Param3 : IndexRange) return ArrayType
+            with Post => (for all I in Param1'Range => InitialArray'Result (I) = Func (Param1, Param2, Param3, I)) and
+                         InitialArray'Result'First = Param1'First and InitialArray'Result'Last = Param1'Last; 
+
+        function To_Even (I : IndexRange) return IndexRange
+            with Pre => I < IndexRange'Last / 2;
         function To_Even (I : IndexRange) return IndexRange
         is
             (2 * I);
 
         function To_Odd (I : IndexRange) return IndexRange
+            with Pre => I < IndexRange'Last / 2;
+        function To_Odd (I : IndexRange) return IndexRange
         is
             (2 * I + 1);
 
         generic 
-            with function Func (I : IndexRange) return ElementType; 
+            with function Func (Param1 : ArrayType;
+                                Param2 : ElementType;
+                                Param3 : IndexRange;
+                                I : IndexRange) return ElementType; 
         package Generic_Lemma_Split_Sum_Func_Odd_Even
             with SPARK_Mode => On
         is
 
 
-            function Even_Func is new Compose (IndexRange, IndexRange, ElementType, Func, To_Even);
-            function Odd_Func is new Compose (IndexRange, IndexRange, ElementType, Func, To_Odd);
+            function Even_Func is new Compose (Func, To_Even);
+            function Odd_Func is new Compose (Func, To_Odd);
 
             function Even_Terms_Array_Generator is new InitialArray (Even_Func);
             function Odd_Terms_Array_Generator is new InitialArray (Odd_Func);
             function Array_Generator is new InitialArray (Func);
             
-            function Lemma_Split_Sum_Func_Odd_Even (Length : Integer) return Boolean
+            function Lemma_Split_Sum_Func_Odd_Even (Param1 : ArrayType;
+                                                    Param2 : ElementType;
+                                                    Param3 : IndexRange;
+                                                    Length : Integer) return Boolean
                 with Pre => Length >= 0 and Length mod 2 = 0,
                      Post => Lemma_Split_Sum_Func_Odd_Even'Result and
-                             Sum (Array_Generator (Length)) = Sum (Even_Terms_Array_Generator (Length / 2)) +
-                                                              Sum (Odd_Terms_Array_Generator (Length / 2));
+                             Sum (Array_Generator (Param1, Param2, Param3)) = 
+                             Sum (Even_Terms_Array_Generator (Param1, Param2, Param3)) +
+                             Sum (Odd_Terms_Array_Generator (Param1, Param2, Param3));
 
         end Generic_Lemma_Split_Sum_Func_Odd_Even;
 
