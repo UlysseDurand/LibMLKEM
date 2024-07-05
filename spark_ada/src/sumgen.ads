@@ -6,6 +6,7 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
         with Pre => A >= 1,
+             Post => (A = 1) or (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)),
              Subprogram_Variant =>  (Decreases => A), 
              Annotate => (GNATprove, Always_Return);
 
@@ -76,6 +77,16 @@ is
                  Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return),
                  Post => Lemma_Sum_Extensional'Result and Sum (A) = Sum (B);
+
+        function Scalar_Mult (A : ElementType;
+                              B : ArrayType) return ArrayType
+            with Post => Scalar_Mult'Result'First = B'First and Scalar_Mult'Result'Last = B'Last and
+                        (for all I in B'Range => (Scalar_Mult'Result (I) = A * B (I)));
+
+        function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
+                                             B : ArrayType) return Boolean
+            with Post => Lemma_Sum_Linear_Scal_Mult'Result and
+                         Sum (Scalar_Mult (A, B))= A * Sum (B);
 
         generic
             with function F (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; B : IndexRange) return ElementType;

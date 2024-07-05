@@ -28,25 +28,9 @@ is
         is
             (To_Big_Integer (Integer (A)));
 
-        --  function "*" (A : T_Ref;
-        --                B : Array_Zq) return Array_Zq
-        --      with Post => (for all I in B'Range => ("*"'Result (I) = A * B (I)));
-
-        --  function "*" (A : T_Ref;
-        --                B : Array_Zq) return Array_Zq
-        --  is
-        --      Res : Array_Zq;
-        --  begin
-        --      for I in B'Range loop
-        --          Res (I) := A * B (I);
-        --      loop;
-        --      return Res;
-        --  end ;
-
-        function "**" (A : T_Ref ;
+        function "**" (A : T_Ref;
                        B : Big_Natural) return T_Ref
-            with Post => "**"'Result = (if B = 0 then 1 else A * (A ** (B - 1))) and
-                         (if (Is_Valid (B)) then "**"'Result = A ** (To_Integer (B))),
+            with Post => "**"'Result = (if B = 0 then 1 else A * (A ** (B - 1))),
                  Subprogram_Variant => (Decreases => B);
 
         function "**" (A : T_Ref ;
@@ -64,9 +48,11 @@ is
    function NTT_Very_Inner_Ref (E : Array_Zq; Psi : T_Ref; J : Index_Ref; I : Index_Ref) return T_Ref 
       with Pre => (I in E'Range),
            Post => NTT_Very_Inner_Ref'Result = Psi ** (2 * To_Big (I) * To_Big (J) + To_Big (I) ) * E (I);
+
    function Array_Generator_Very_Inner is new Generic_Sum.InitialArray (NTT_Very_Inner_Ref);
 
-   function NTT_Inner_Ref (E : Array_Zq; Psi : T_Ref; Useless : Index_Ref; J : Index_Ref) return T_Ref;
+   function NTT_Inner_Ref (E : Array_Zq; Psi : T_Ref; Useless : Index_Ref; J : Index_Ref) return T_Ref
+      with Post => NTT_Inner_Ref'Result = Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J));
 
    function Array_Generator_Inner is new Generic_Sum.InitialArray (NTT_Inner_Ref);
 
@@ -74,6 +60,7 @@ is
                       Psi : T_Ref) return Array_Zq
         with Pre => ((E'First = 0 and E'Last >= E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then
                     (E'Length = 1 or Is_Pow_Of_Two (E'Length)),
-             Post => NTT_Ref'Result'First = E'First and NTT_Ref'Result'Last = E'Last;
+             Post => NTT_Ref'Result'First = E'First and NTT_Ref'Result'Last = E'Last and
+                     NTT_Ref'Result = Array_Generator_Inner (E, Psi, 0);
 
 end RefMLKEM;

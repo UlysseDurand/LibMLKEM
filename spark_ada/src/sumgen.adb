@@ -7,7 +7,7 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
     is
-        (if A = 1 then True else (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)));
+        (A = 1 or (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)));
 
 
     package body Sum_On_Array is 
@@ -183,6 +183,29 @@ is
             end if;
             return True;
         end Lemma_Sum_Extensional;
+
+        function Scalar_Mult (A : ElementType;
+                              B : ArrayType) return ArrayType
+        is
+            Res : ArrayType (B'Range) with Relaxed_Initialization;
+        begin
+            for I in B'Range loop
+                Res (I) := A * B (I);
+                pragma Loop_Invariant ( 
+                    for all J in B'First .. I =>
+                        Res (J)'Initialized and 
+                        Res (J) = A * B (J)
+                );
+            end loop;
+            return Res;
+        end Scalar_Mult;
+
+        function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
+                                             B : ArrayType) return Boolean
+        is
+        begin
+            return True;
+        end Lemma_Sum_Linear_Scal_Mult;
 
         function InitialArray (Param1 : ArrayType;
                                Param2 : ElementType;

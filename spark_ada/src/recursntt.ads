@@ -11,10 +11,11 @@ is
     --  This function is meant to be recursive
     function NTT_Recurs (E : Array_Zq;
                          Psi : T_Ref) return Array_Zq
-        with Pre => (Psi ** E'Length / 2 = - 1 and
+        with Pre => (Psi ** To_Big_Integer (E'Length) = - 1 and
                     (E'First = 0 and E'Last >= E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then  
-                    (E'Length = 1 or Is_Pow_Of_Two (E'Length)),
-             Post => NTT_Recurs'Result'First = E'First and NTT_Recurs'Result'Last = E'Last,
+                    (Is_Pow_Of_Two (E'Length)),
+             Post => NTT_Recurs'Result'First = E'First and NTT_Recurs'Result'Last = E'Last and
+                     NTT_Recurs'Result = NTT_Ref (E, Psi),
              Subprogram_Variant => (Decreases => E'Length),
              Annotate => (GNATprove, Always_Return);
 
