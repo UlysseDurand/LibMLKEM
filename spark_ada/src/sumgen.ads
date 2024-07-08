@@ -6,7 +6,7 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
         with Pre => A >= 1,
-             Post => (A = 1) or (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)),
+             Post => Is_Pow_Of_Two'Result = ((A = 1) or (A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)))),
              Subprogram_Variant =>  (Decreases => A), 
              Annotate => (GNATprove, Always_Return);
 
@@ -36,7 +36,8 @@ is
                          (for all I in F'Range => ("+"'Result (I) = F (I) + G (I)));
 
         function Sum (A : ArrayType) return ElementType
-            with Subprogram_Variant => (Decreases => A'Length),
+            with Post => Sum'Result = (if A'Length = 0 then 0 elsif A'Length = 1 then A (A'First) else Sum (Cut_Last (A)) + A (A'Last)),
+                 Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return);
             
         function Lemma_Add_Associative (A : ElementType;

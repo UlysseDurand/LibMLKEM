@@ -7,8 +7,17 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
     is
-        (A = 1 or (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)));
-
+        Res : Boolean;
+    begin
+        if A = 1 then
+            Res := True;
+        else
+            pragma Assert (A / 2 >= 1);
+            Res := A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2));
+        end if;
+        pragma Assert (Res = (A = 1 or (A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)))));
+        return Res;
+    end Is_Pow_Of_Two;
 
     package body Sum_On_Array is 
 
@@ -204,6 +213,7 @@ is
                                              B : ArrayType) return Boolean
         is
         begin
+            pragma Assume (Sum (Scalar_Mult (A, B)) = A * (Sum (B))); 
             return True;
         end Lemma_Sum_Linear_Scal_Mult;
 

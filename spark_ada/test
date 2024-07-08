@@ -1,0 +1,118 @@
+[200~gnatprove -Pmlkem -u src/recursntt.adb --info
+Phase 1 of 2: generation of program properties ...
+Phase 2 of 2: flow analysis and proof ...
+
+recursntt.adb:46:17: warning: unused variable "B_Bis_Minus"
+   46 |                B_Bis_Minus : Array_Zq (A_Recurs'Range) with Relaxed_Initialization;
+      |                ^~~~~~~~~~~
+
+recursntt.adb:58:65: medium: assertion might fail, cannot prove A_Ref (J_Dex) = NTT_Inner_Ref (E_Even, Psi_Square, 0, J_Dex)
+   58 |                pragma Assert (for all J_Dex in E_Even'Range => (A_Ref (J_Dex) = NTT_Inner_Ref (E_Even, Psi_Square, 0, J_Dex)));
+      |                                                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:61:64: medium: assertion might fail, cannot prove B_Ref (J_Dex) = NTT_Inner_Ref (E_Odd, Psi_Square, 0, J_Dex)
+   61 |                pragma Assert (for all J_Dex in E_Odd'Range => (B_Ref (J_Dex) = NTT_Inner_Ref (E_Odd, Psi_Square, 0, J_Dex)));
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:66:25: warning: initialization of "J_Bis" has no effect
+   66 |                        J_Bis : T_Ref := T_Ref (J + Num_Mid);
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+recursntt.adb:125:52: medium: assertion might fail
+  125 |                                    pragma Assert (B_Bis_Very_Inner (I_Dex) = Psi ** (4 * I_Big * J_Big + 2 * I_Big + 2 * J_Big + 1) * E_Odd (I_Dex));
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:143:48: medium: assertion might fail
+  143 |                                pragma Assert (A_J_Plus_Mid_Very_Inner (I_Dex) = NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex + Mid_Dex, I_Dex));
+      |                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:157:48: medium: assertion might fail
+  157 |                                pragma Assert (B_J_Plus_Mid_Very_Inner (I_Dex) = NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex + Mid_Dex, I_Dex));
+      |                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:180:41: medium: assertion step might fail
+  180 |                                        B_Bis_Minus_Very_Inner (I_Dex) = ((-1) * Psi ** (2 * J_Big + 1)) * B_J_Very_Inner (I_Dex),
+      |                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:193:41: medium: assertion step might fail
+  193 |                                        Psi ** (2 * To_Big_Integer (E'Length)) = (Psi ** To_Big_Integer (E'Length)) ** To_Big_Integer (2),
+      |                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+recursntt.adb:196:52: medium: assertion might fail
+  196 |                                    pragma Assert (1 ** (I_Big) = 1);
+      |                                                   ^~~~~~~~~~~~~~~~
+
+recursntt.adb:198:52: medium: assertion might fail
+  198 |                                    pragma Assert (B_Bis_Minus_Very_Inner (I_Dex) = (Psi ** To_Big_Integer (E'Length)) * ((Psi ** (2 * J_Big + 1)) * (Psi ** (4 * I_Big * J_Big + 2 * I_Big))) * E_Odd (I_Dex));
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:204:52: medium: assertion might fail
+  204 |                                    pragma Assert (B_Bis_Minus_Very_Inner (I_Dex) = (Psi ** To_Big_Integer (E'Length)) * ((Psi ** (2 * I_Big * To_Big_Integer (E'Length))) * Psi ** (4 * I_Big * J_Big + 2 * I_Big + 2 * J_Big + 1) * E_Odd (I_Dex)));
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:211:41: medium: assertion step might fail
+  211 |                                        Psi ** (To_Big_Integer (E'Length) + 2 * I_Big * To_Big_Integer (E'Length)) * Psi ** (4 * I_Big * J_Big + 2 * I_Big + 2 * J_Big + 1) = Psi ** (To_Big_Integer (E'Length) + 2 * I_Big * To_Big_Integer (E'Length) + 4 * I_Big * J_Big + 2 * I_Big + 2 * J_Big + 1),
+      |                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+recursntt.adb:214:52: medium: assertion might fail
+  214 |                                    pragma Assert (B_Bis_Minus_Very_Inner (I_Dex) = Psi ** (To_Big_Integer (E'Length) + 2 * I_Big * To_Big_Integer (E'Length) + 4 * I_Big * J_Big + 2 * I_Big + 2 * J_Big + 1) * E_Odd (I_Dex));
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:216:52: medium: assertion might fail
+  216 |                                    pragma Assert (B_Bis_Minus_Very_Inner (I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex + Mid_Dex, 2 * I_Dex + 1));
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: precondition of subprogram at recursntt.ads:12 should mention E
+   12 |    function NTT_Recurs (E : Array_Zq;
+      |    ^ here
+
+recursntt.adb:255:40: medium: assertion might fail
+  255 |                        pragma Assert (Res (J_Dex) = Generic_Sum.Sum (Big_Array));
+      |                                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  possible fix: loop at line 63 should mention Res in a loop invariant
+   63 |                for J in 0 .. Num_Mid - 1 loop
+      |                                          ^ here
+
+recursntt.adb:304:32: medium: assertion might fail
+  304 |                pragma Assert (Res = Goal);
+      |                               ^~~~~~~~~~
+  possible fix: loop at line 63 should mention Res in a loop invariant
+   63 |                for J in 0 .. Num_Mid - 1 loop
+      |                                          ^ here
+recursntt.ads:12:14: info: function contract might not be available on recursive calls
+
+recursntt.ads:25:29: warning: conjunct in postcondition does not check the outcome of calling "Lemma_Minus_Factor"
+   25 |                     (X - Y = X + (-1) * Y);
+      |                      ~~~~~~^~~~~~~~~~~~~~
+
+recursntt.ads:31:34: warning: conjunct in postcondition does not check the outcome of calling "Lemma_Mult_Associative"
+   31 |                     (X * Y) * Z = X * (Y * Z);
+      |                      ~~~~~~~~~~~^~~~~~~~~~~~
+Summary logged in /home/Durand/git/m1_internship/LibMLKEM/spark_ada/obj/gnatprove/gnatprove.out
+
