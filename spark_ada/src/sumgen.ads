@@ -55,14 +55,14 @@ is
             with Pre => F'First = 0 and F'Length mod 2 = 0 and F'Length > 1,
                  Post => Extract_Even'Result'First = 0 and Extract_Even'Result'Length = F'Length / 2 and 
                          (for all I in Extract_Even'Result'Range => 
-                            Extract_Even'Result (IndexRange (I)) = F (IndexRange (2 * I))
+                            Extract_Even'Result (I) = F (2 * I)
                          );
 
         function Extract_Odd (F : ArrayType) return ArrayType
             with Pre => F'First = 0 and F'Length mod 2 = 0 and F'Length > 1,
                  Post => Extract_Odd'Result'First = 0 and Extract_Odd'Result'Length = F'Length / 2 and 
                          (for all I in Extract_Odd'Result'Range => 
-                            Extract_Odd'Result (IndexRange (I)) = F (IndexRange (2 * I + 1))
+                            Extract_Odd'Result (I) = F (2 * I + 1)
                          );
 
         function Lemma_Split_Odd_Even (A :  ArrayType) return Boolean
