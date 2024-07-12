@@ -1,23 +1,23 @@
 proverewrite1:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:218
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:185 -f
 
 proverewrite2:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:235
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:201 -f
 
 proverewrite3:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:256
-
-proverewrite3bis:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:273
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:228 -f
 
 proverewrite4:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:299
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:271 -f
 
 proverecurs:
 	gnatprove -Pmlkem -u src/recursntt.adb --info
 
 proverecursmain:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:11 --counterexamples=off
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:11 --counterexamples=off --info
+
+proverecursequiv:
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:47 --counterexamples=off --info
 
 
 proveref:

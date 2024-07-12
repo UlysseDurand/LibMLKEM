@@ -93,82 +93,84 @@ is
             return Res;
         end Extract_Odd;
 
-        function Lemma_Split_Odd_Even (A :  ArrayType) return Boolean
+        function Lemma_Split_Odd_Even (A : ArrayType;
+                                       B : ArrayType;
+                                       C : ArrayType) return Boolean
         is
         begin
             if (A'Length = 2) then
-                pragma Assert (Extract_Even (A)'Length = 1);
-                pragma Assert (Extract_Even (A)'Last = 0);
-                pragma Assert (Sum (Extract_Even (A)) = Extract_Even (A)(Extract_Even (A)'Last));
-                pragma Assert (Sum (Extract_Even (A)) = A (0));
-                pragma Assert (Sum (A) = Sum (Extract_Even (A)) + Sum (Extract_Odd (A)));
+                pragma Assert (B'Length = 1);
+                pragma Assert (B'Last = 0);
+                pragma Assert (Sum (B) = B(B'Last));
+                pragma Assert (Sum (B) = A (0));
+                pragma Assert (Sum (A) = Sum (B) + Sum (C));
             else
                 declare
                     pragma Assert (A'Length > 2);
-                    B : ArrayType := Cut_Last (Cut_Last (A));
-                    Induction_Hypothesis : Boolean := Lemma_Split_Odd_Even (B);
+                    A_Shorter : ArrayType := Cut_Last (Cut_Last (A));
+                    Induction_Hypothesis : Boolean := Lemma_Split_Odd_Even (A_Shorter, Cut_Last (B), Cut_Last (C));
                     Even_A : ArrayType := Extract_Even (A);
                     Odd_A : ArrayType := Extract_Odd (A);
-                    Even_B : ArrayType := Extract_Even (B);
-                    Odd_B : ArrayType := Extract_Odd (B);
+                    Even_A_Shorter : ArrayType := Extract_Even (A_Shorter);
+                    Odd_A_Shorter : ArrayType := Extract_Odd (A_Shorter);
                 begin
-                    pragma Assert (By (Sum (B) = Sum (Even_B) + Sum (Odd_B), Induction_Hypothesis));
+                    pragma Assert (By (Sum (A_Shorter) = Sum (Even_A_Shorter) + Sum (Odd_A_Shorter), Induction_Hypothesis));
 
-                    --  We prove Sum (Even_A) = Sum(Even_B) + A (A'Last - 1)
-                    pragma Assert (for all I in Even_B'First .. Even_B'Last => (
-                        Cut_Last (Even_A) (I) = Even_B (I)
+                    --  We prove Sum (Even_A) = Sum(Even_A_Shorter) + A (A'Last - 1)
+                    pragma Assert (for all I in Even_A_Shorter'First .. Even_A_Shorter'Last => (
+                        Cut_Last (Even_A) (I) = Even_A_Shorter (I)
                     ));
-                    pragma Assert (Cut_Last (Even_A)'First = Even_B'First);
-                    pragma Assert (Cut_Last (Even_A)'Last = Even_B'Last);
-                    pragma Assert (Cut_Last (Even_A) = Even_B);
+                    pragma Assert (Cut_Last (Even_A)'First = Even_A_Shorter'First);
+                    pragma Assert (Cut_Last (Even_A)'Last = Even_A_Shorter'Last);
+                    pragma Assert (Cut_Last (Even_A) = Even_A_Shorter);
                     pragma Assert (By (
-                        Sum (Cut_Last (Even_A)) = Sum (Even_B), 
-                        Lemma_Sum_Extensional (Cut_Last (Even_A), Even_B)
+                        Sum (Cut_Last (Even_A)) = Sum (Even_A_Shorter), 
+                        Lemma_Sum_Extensional (Cut_Last (Even_A), Even_A_Shorter)
                     ));
                     pragma Assert (Even_A (Even_A'Last) = A (A'Last - 1));
-                    pragma Assert (Sum (Even_A) = Sum (Even_B) + A (A'Last - 1));
+                    pragma Assert (Sum (Even_A) = Sum (Even_A_Shorter) + A (A'Last - 1));
 
-                    --  We prove Sum (Odd_A) = Sum (Odd_B) + A (A'Last)
-                    pragma Assert (for all I in Odd_B'First .. Odd_B'Last - 1 => (
-                        Odd_A (I) = Odd_B (I)
+                    --  We prove Sum (Odd_A) = Sum (Odd_A_Shorter) + A (A'Last)
+                    pragma Assert (for all I in Odd_A_Shorter'First .. Odd_A_Shorter'Last - 1 => (
+                        Odd_A (I) = Odd_A_Shorter (I)
                     ));
-                    pragma Assert (for all I in Odd_B'First .. Odd_B'Last => (
-                        Cut_Last (Odd_A) (I) = Odd_B (I)
+                    pragma Assert (for all I in Odd_A_Shorter'First .. Odd_A_Shorter'Last => (
+                        Cut_Last (Odd_A) (I) = Odd_A_Shorter (I)
                     ));
-                    pragma Assert (Cut_Last (Odd_A)'First = Odd_B'First);
-                    pragma Assert (Cut_Last (Odd_A)'Last = Odd_B'Last);
-                    pragma Assert (Cut_Last (Odd_A) = Odd_B);
+                    pragma Assert (Cut_Last (Odd_A)'First = Odd_A_Shorter'First);
+                    pragma Assert (Cut_Last (Odd_A)'Last = Odd_A_Shorter'Last);
+                    pragma Assert (Cut_Last (Odd_A) = Odd_A_Shorter);
                     pragma Assert (By (
-                        Sum (Cut_Last (Odd_A)) = Sum (Odd_B), 
-                        Lemma_Sum_Extensional (Cut_Last (Odd_A), Odd_B)
+                        Sum (Cut_Last (Odd_A)) = Sum (Odd_A_Shorter), 
+                        Lemma_Sum_Extensional (Cut_Last (Odd_A), Odd_A_Shorter)
                     ));
                     pragma Assert (Odd_A (Extract_Odd (A)'Last) = A (A'Last));
-                    pragma Assert (Sum (Odd_A) = Sum (Odd_B) + A (A'Last));
+                    pragma Assert (Sum (Odd_A) = Sum (Odd_A_Shorter) + A (A'Last));
 
-                    -- We prove Sum (A) = Sum (B) + A (A'Last - 1) + A (A'Last)
+                    -- We prove Sum (A) = Sum (A_Shorter) + A (A'Last - 1) + A (A'Last)
                     pragma Assert (Sum (A) = Sum (Cut_Last (A)) + A (A'Last));
-                    pragma Assert (Sum (Cut_Last (A)) = Sum (B) + A (A'Last - 1));
-                    pragma Assert (Sum (A) = Sum (B) + A (A'Last - 1) + A (A'Last));
+                    pragma Assert (Sum (Cut_Last (A)) = Sum (A_Shorter) + A (A'Last - 1));
+                    pragma Assert (Sum (A) = Sum (A_Shorter) + A (A'Last - 1) + A (A'Last));
 
-                    pragma Assert (Sum (A) = ((Sum (Even_B) + Sum (Odd_B)) + A (A'Last - 1)) + A (A'Last));
+                    pragma Assert (Sum (A) = ((Sum (Even_A_Shorter) + Sum (Odd_A_Shorter)) + A (A'Last - 1)) + A (A'Last));
 
                     --  All of the following just rearranges the terms to have
-                    -- Sum (A) = (Sum (Even_B) + A (A'Last - 1)) + (Sum (Even_B) + A (A'Last))
+                    -- Sum (A) = (Sum (Even_A_Shorter) + A (A'Last - 1)) + (Sum (Even_A_Shorter) + A (A'Last))
                     pragma Assert (By (
-                        ((Sum (Even_B) + Sum (Odd_B)) + A (A'Last - 1)) + A (A'Last) = (Sum (Even_B) + (Sum (Odd_B) + A (A'Last - 1))) + A (A'Last),
-                        Lemma_Add_Associative (Sum (Even_B), Sum (Odd_B), A (A'Last - 1))
+                        ((Sum (Even_A_Shorter) + Sum (Odd_A_Shorter)) + A (A'Last - 1)) + A (A'Last) = (Sum (Even_A_Shorter) + (Sum (Odd_A_Shorter) + A (A'Last - 1))) + A (A'Last),
+                        Lemma_Add_Associative (Sum (Even_A_Shorter), Sum (Odd_A_Shorter), A (A'Last - 1))
                     ));
                     pragma Assert (By (
-                        (Sum (Even_B) + (Sum (Odd_B) + A (A'Last - 1))) + A (A'Last) = (Sum (Even_B) + (A (A'Last - 1) + Sum (Odd_B))) + A (A'Last),
-                        Lemma_Add_Commutative (A (A'Last - 1), Sum (Odd_B))
+                        (Sum (Even_A_Shorter) + (Sum (Odd_A_Shorter) + A (A'Last - 1))) + A (A'Last) = (Sum (Even_A_Shorter) + (A (A'Last - 1) + Sum (Odd_A_Shorter))) + A (A'Last),
+                        Lemma_Add_Commutative (A (A'Last - 1), Sum (Odd_A_Shorter))
                     ));
                     pragma Assert (By (
-                        (Sum (Even_B) + (A (A'Last - 1) + Sum (Odd_B))) + A (A'Last) = ((Sum (Even_B) + A (A'Last - 1)) + Sum (Odd_B)) + A (A'Last),
-                        Lemma_Add_Associative (Sum (Even_B), A (A'Last - 1), Sum (Odd_B))
+                        (Sum (Even_A_Shorter) + (A (A'Last - 1) + Sum (Odd_A_Shorter))) + A (A'Last) = ((Sum (Even_A_Shorter) + A (A'Last - 1)) + Sum (Odd_A_Shorter)) + A (A'Last),
+                        Lemma_Add_Associative (Sum (Even_A_Shorter), A (A'Last - 1), Sum (Odd_A_Shorter))
                     ));
                     pragma Assert (By (
-                        ((Sum (Even_B) + A (A'Last - 1)) + Sum (Odd_B)) + A (A'Last) = (Sum (Even_B) + A (A'Last - 1)) + (Sum (Odd_B) + A (A'Last)),
-                        Lemma_Add_Associative (Sum (Even_B) + A (A'Last - 1), Sum (Odd_B), A (A'Last))
+                        ((Sum (Even_A_Shorter) + A (A'Last - 1)) + Sum (Odd_A_Shorter)) + A (A'Last) = (Sum (Even_A_Shorter) + A (A'Last - 1)) + (Sum (Odd_A_Shorter) + A (A'Last)),
+                        Lemma_Add_Associative (Sum (Even_A_Shorter) + A (A'Last - 1), Sum (Odd_A_Shorter), A (A'Last))
                     ));
                     --
                     pragma Assert (Sum (A) = Sum (Even_A) + Sum (Odd_A));
@@ -210,10 +212,11 @@ is
         end Scalar_Mult;
 
         function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
-                                             B : ArrayType) return Boolean
+                                             B : ArrayType;
+                                             C : ArrayType) return Boolean
         is
         begin
-            pragma Assume (Sum (Scalar_Mult (A, B)) = A * (Sum (B))); 
+            pragma Assume (Sum (C) = A * (Sum (B))); 
             return True;
         end Lemma_Sum_Linear_Scal_Mult;
 
@@ -234,28 +237,6 @@ is
             end loop;
             return Res;
         end InitialArray;
-
-        function Compose (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; A : IndexRange) return ElementType
-        is 
-            (F (Param1, Param2, Param3, G (A)));
-
-        package body Generic_Lemma_Split_Sum_Func_Odd_Even 
-            with SPARK_Mode => On
-        is
-            function Lemma_Split_Sum_Func_Odd_Even (Param1 : ArrayType;
-                                                    Param2 : ElementType;
-                                                    Param3 : IndexRange;
-                                                    Length : Integer) return Boolean
-            is
-            begin
-                pragma Assert (0 = 1);
-                pragma Assert (
-                    Sum (Array_Generator (Param1, Param2, Param3)) = 
-                    Sum (Even_Terms_Array_Generator (Param1, Param2, Param3)) + 
-                    Sum (Odd_Terms_Array_Generator (Param1, Param2, Param3)));
-                return True;
-            end Lemma_Split_Sum_Func_Odd_Even;
-        end Generic_Lemma_Split_Sum_Func_Odd_Even;
 
     end Sum_On_Array;
 

@@ -65,8 +65,12 @@ is
                             Extract_Odd'Result (I) = F (2 * I + 1)
                          );
 
-        function Lemma_Split_Odd_Even (A :  ArrayType) return Boolean
-            with Pre => A'First = 0 and A'Length mod 2 = 0 and A'Length > 1,
+        function Lemma_Split_Odd_Even (A : ArrayType;
+                                       B : ArrayType;
+                                       C : ArrayType) return Boolean
+            with Pre => A'First = 0 and A'Length mod 2 = 0 and A'Length > 1 and
+                        B'First = 0 and C'First = 0 and B'Length = A'Length / 2 and C'Length = A'Length / 2 and
+                        (for all I in A'Range => (B (I) = A (2 * I) and C (I) = A (2 * I + 1))),
                  Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return),
                  Post => Lemma_Split_Odd_Even'Result and
@@ -85,14 +89,12 @@ is
                         (for all I in B'Range => (Scalar_Mult'Result (I) = A * B (I)));
 
         function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
-                                             B : ArrayType) return Boolean
-            with Post => Lemma_Sum_Linear_Scal_Mult'Result and
-                         Sum (Scalar_Mult (A, B))= A * Sum (B);
-
-        generic
-            with function F (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; B : IndexRange) return ElementType;
-            with function G (A : IndexRange) return IndexRange;
-        function Compose (Param1 : ArrayType; Param2 : ElementType; Param3 : IndexRange; A : IndexRange) return ElementType;
+                                             B : ArrayType;
+                                             C : ArrayType) return Boolean
+            with Pre => B'First = C'First and B'Last = C'Last and ( 
+                        for all I in B'Range => (C (I) = A * B(I))),
+                Post => Lemma_Sum_Linear_Scal_Mult'Result and
+                        Sum (C) = A * Sum (B);
 
         generic
             with function Func (Param1 : ArrayType;
@@ -104,48 +106,6 @@ is
                                Param3 : IndexRange) return ArrayType
             with Post => (for all I in Param1'Range => InitialArray'Result (I) = Func (Param1, Param2, Param3, I)) and
                          InitialArray'Result'First = Param1'First and InitialArray'Result'Last = Param1'Last; 
-
-        function To_Even (I : IndexRange) return IndexRange
-            with Pre => I < IndexRange'Last / 2;
-        function To_Even (I : IndexRange) return IndexRange
-        is
-            (2 * I);
-
-        function To_Odd (I : IndexRange) return IndexRange
-            with Pre => I < IndexRange'Last / 2;
-        function To_Odd (I : IndexRange) return IndexRange
-        is
-            (2 * I + 1);
-
-        generic 
-            with function Func (Param1 : ArrayType;
-                                Param2 : ElementType;
-                                Param3 : IndexRange;
-                                I : IndexRange) return ElementType; 
-        package Generic_Lemma_Split_Sum_Func_Odd_Even
-            with SPARK_Mode => On
-        is
-
-
-            function Even_Func is new Compose (Func, To_Even);
-            function Odd_Func is new Compose (Func, To_Odd);
-
-            function Even_Terms_Array_Generator is new InitialArray (Even_Func);
-            function Odd_Terms_Array_Generator is new InitialArray (Odd_Func);
-            function Array_Generator is new InitialArray (Func);
-            
-            function Lemma_Split_Sum_Func_Odd_Even (Param1 : ArrayType;
-                                                    Param2 : ElementType;
-                                                    Param3 : IndexRange;
-                                                    Length : Integer) return Boolean
-                with Pre => Length >= 0 and Length mod 2 = 0,
-                     Post => Lemma_Split_Sum_Func_Odd_Even'Result and
-                             Sum (Array_Generator (Param1, Param2, Param3)) = 
-                             Sum (Even_Terms_Array_Generator (Param1, Param2, Param3)) +
-                             Sum (Odd_Terms_Array_Generator (Param1, Param2, Param3));
-
-        end Generic_Lemma_Split_Sum_Func_Odd_Even;
-
     end Sum_On_Array; 
 
 end SumGen;
