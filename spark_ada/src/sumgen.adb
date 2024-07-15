@@ -93,22 +93,20 @@ is
             return Res;
         end Extract_Odd;
 
-        function Lemma_Split_Odd_Even (A : ArrayType;
-                                       B : ArrayType;
-                                       C : ArrayType) return Boolean
+        function Lemma_Split_Odd_Even (A : ArrayType) return Boolean
         is
         begin
             if (A'Length = 2) then
-                pragma Assert (B'Length = 1);
-                pragma Assert (B'Last = 0);
-                pragma Assert (Sum (B) = B(B'Last));
-                pragma Assert (Sum (B) = A (0));
-                pragma Assert (Sum (A) = Sum (B) + Sum (C));
+                pragma Assert (Extract_Even (A)'Length = 1);
+                pragma Assert (Extract_Even (A)'Last = 0);
+                pragma Assert (Sum (Extract_Even (A)) = Extract_Even (A)(Extract_Even (A)'Last));
+                pragma Assert (Sum (Extract_Even (A)) = A (0));
+                pragma Assert (Sum (A) = Sum (Extract_Even (A)) + Sum (Extract_Odd (A)));
             else
                 declare
                     pragma Assert (A'Length > 2);
                     A_Shorter : ArrayType := Cut_Last (Cut_Last (A));
-                    Induction_Hypothesis : Boolean := Lemma_Split_Odd_Even (A_Shorter, Cut_Last (B), Cut_Last (C));
+                    Induction_Hypothesis : Boolean := Lemma_Split_Odd_Even (A_Shorter);
                     Even_A : ArrayType := Extract_Even (A);
                     Odd_A : ArrayType := Extract_Odd (A);
                     Even_A_Shorter : ArrayType := Extract_Even (A_Shorter);

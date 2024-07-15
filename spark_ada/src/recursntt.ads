@@ -40,9 +40,9 @@ is
         (Psi ** (To_Big_Integer (2)));
 
     function Lemma_Recurs_Equiv_Ref (E : Array_Zq ; Psi : T_Ref) return Boolean
-        with Pre => (Psi ** To_Big_Integer (E'Length) = - 1) and
-                    (E'First = 0 and E'Length >= 0) and
-                    Is_Pow_Of_Two (E'Length), 
+        with Pre => ((Psi ** To_Big_Integer (E'Length) = - 1) and
+                    (E'First = 0 and E'Length > 0)) and then (
+                    Is_Pow_Of_Two (E'Length)), 
             Post => Lemma_Recurs_Equiv_Ref'Result and NTT_Recurs (E, Psi) = NTT_Ref (E, Psi),
              Subprogram_Variant => (Decreases => E'Length),
              Annotate => (GNATprove, Always_Return);
@@ -94,19 +94,46 @@ is
             Post => (- Psi ** (2 * J_Big + 1)) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex + Mid_Dex, 2 * I_Dex + 1);
 
     procedure rewrite5 (E : Array_Zq ; E_Even : Array_Zq ; Psi :T_Ref ; Psi_Square :T_Ref ; J_Dex :Index_Ref)
-        with Pre => ( 
+        with Pre => (
                 Psi ** To_Big_Integer (E'Length) = -1 and
                 E'First = 0 and
                 E_Even'Length = E'Length / 2 and
-                E'Length mod 2 = 0 and
-                E_Even'Last = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex))'Last and
-                E_Even'First = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex))'First) and then (
-                    (for all I_Dex in E_Even'Range => (
-                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex)
-                    )) and
-                    J_Dex in E_Even'Range
+                E'Length mod 2 = 0) and then ((
+                    Is_Pow_Of_Two (E'Length) and
+                    Psi_Square = Square (E, Psi) and
+                    E_Even'Last = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex))'Last and
+                    E_Even'First = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex))'First )and then (
+                        (for all I_Dex in E_Even'Range => (
+                            Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex)
+                        )) and
+                        J_Dex in E_Even'Range and
+                        NTT_Recurs (E_Even, Psi_Square) = NTT_Ref (E_Even, Psi_Square)
+                    )
                 ),
             Post => NTT_Recurs (E_Even, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)));
+
+    procedure rewrite6 (E : Array_Zq ; E_Odd : Array_Zq ; Psi :T_Ref ; Psi_Square :T_Ref ; J_Dex :Index_Ref; B_Bis_J_Array : Array_Zq)
+        with Pre => (
+                Psi ** To_Big_Integer (E'Length) = -1 and
+                E'First = 0 and
+                E_Odd'First = 0 and
+                E_Odd'Length = E'Length / 2 and
+                E'Length mod 2 = 0) and then ((
+                    Is_Pow_Of_Two (E'Length) and
+                    Psi_Square = Square (E, Psi) and
+                    B_Bis_J_Array'Last = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'Last and
+                    B_Bis_J_Array'First = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'First )and then (
+                        (for all I_Dex in B_Bis_J_Array'Range => (
+                            B_Bis_J_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex)
+                        )) and
+                        (for all I_Dex in B_Bis_J_Array'Range => ( 
+                            B_Bis_J_Array (I_Dex) = Psi ** (2 * To_Big (J_Dex) + 1) * Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex)
+                        )) and
+                        J_Dex in E_Odd'Range and
+                        NTT_Recurs (E_Odd, Psi_Square) = NTT_Ref (E_Odd, Psi_Square)
+                    )
+                ),
+            Post => Psi ** (2 * To_Big (J_Dex) + 1) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)));
 
 
 

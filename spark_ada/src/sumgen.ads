@@ -65,12 +65,8 @@ is
                             Extract_Odd'Result (I) = F (2 * I + 1)
                          );
 
-        function Lemma_Split_Odd_Even (A : ArrayType;
-                                       B : ArrayType;
-                                       C : ArrayType) return Boolean
-            with Pre => A'First = 0 and A'Length mod 2 = 0 and A'Length > 1 and
-                        B'First = 0 and C'First = 0 and B'Length = A'Length / 2 and C'Length = A'Length / 2 and
-                        (for all I in A'Range => (B (I) = A (2 * I) and C (I) = A (2 * I + 1))),
+        function Lemma_Split_Odd_Even (A : ArrayType) return Boolean
+            with Pre => A'First = 0 and A'Length mod 2 = 0 and A'Length > 1,
                  Subprogram_Variant => (Decreases => A'Length),
                  Annotate => (GNATprove, Always_Return),
                  Post => Lemma_Split_Odd_Even'Result and

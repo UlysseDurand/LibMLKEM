@@ -10,6 +10,12 @@ proverewrite3:
 proverewrite4:
 	gnatprove -Pmlkem --limit-subp=recursntt.adb:271 -f
 
+proverewrite5:
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:315 -f
+	
+proverewrite6:
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:343 -f
+
 proverecurs:
 	gnatprove -Pmlkem -u src/recursntt.adb --info
 
