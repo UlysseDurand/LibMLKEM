@@ -1,14 +1,16 @@
+proverewrites: proverewrite1 proverewrite2 proverewrite3 proverewrite4
+
 proverewrite1:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:185 -f
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:246 -f
 
 proverewrite2:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:201 -f
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:262 -f
 
 proverewrite3:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:228 -f
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:289 -f
 
 proverewrite4:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:271 -f
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:332 -f
 
 proverewrite5:
 	gnatprove -Pmlkem --limit-subp=recursntt.adb:315 -f

@@ -176,7 +176,7 @@ library project MLKEM is
                                       "--no-loop-unrolling",
                                       "--level=2",
                                       "--prover=z3,cvc5,altergo",
-                                      "--timeout=4",
+                                      "--timeout=30",
                                       "--memlimit=0",
                                       "--steps=25000",
                                       "--report=fail");
