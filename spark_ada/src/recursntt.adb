@@ -65,156 +65,125 @@ is
                 Mid_Dex : Index_Ref := Index_Ref (E'Length / 2); 
             begin
                 for J_Dex in 0 .. Mid_Dex - 1 loop
-                    declare
-                        B_Bis_J_Array : Array_Zq (E_Odd'Range) with Relaxed_Initialization;
-                        B_Bis_J_Plus_Mid_Array : Array_Zq (E_Odd'Range) with Relaxed_Initialization;
-                    begin
-                        for I_Dex in 0 .. Mid_Dex - 1 loop
-                            begin
-                                rewrite1 (E, E_Even, Psi, Psi_Square, J_Dex, I_Dex, To_Big (J_Dex), To_Big (I_Dex));
-                                pragma Assert (NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex) (2 * I_Dex));
-                                pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex));
-                            end;
-
-                            B_Bis_J_Array (I_Dex) := Psi ** (2 * To_Big (J_Dex) + 1) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex);
-                            begin
-                                rewrite2 (E, E_Odd, Psi, Psi_Square, J_Dex, I_dex, To_Big (J_Dex), To_Big (I_Dex));
-                                pragma Assert (B_Bis_J_Array (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex) (2 * I_Dex + 1));
-                                pragma Assert_And_Cut (B_Bis_J_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex));
-                            end;
-
-                            begin
-                                rewrite3 (E, E_Even, Psi, Psi_Square, Mid_Dex, J_Dex, I_Dex, To_Big (Mid_Dex), To_Big (J_Dex), To_Big (I_Dex));
-                                pragma Assert (NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex));
-                                pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex));
-                            end;
-                            
-                            B_Bis_J_Plus_Mid_Array (I_Dex) := (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex);
-                            begin
-                                rewrite4 (E, E_Odd, Psi, Psi_Square, Mid_Dex, J_Dex, I_Dex, To_Big (Mid_Dex), To_Big (J_Dex), To_Big (I_Dex));
-                                pragma Assert ((- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex + Mid_Dex, 2 * I_Dex + 1));
-                                pragma Assert (B_Bis_J_Plus_Mid_Array (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex + 1));
-                                pragma Assert (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex + 1));
-                                pragma Assert_And_Cut (B_Bis_J_Plus_Mid_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex));
-                            end;
-
-                        --      pragma Loop_Invariant (for all I in 0 .. I_Dex => ((
-                        --          -- Arrays Definition
-                        --          B_Bis_J_Array (I)'Initialized and
-                        --          B_Bis_J_Plus_Mid_Array (I)'Initialized) and then (( 
-                        --              B_Bis_J_Array (I) = Psi ** (2 * To_Big (J_Dex) + 1) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I) and
-                        --              B_Bis_J_Plus_Mid_Array (I) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I)
-                        --              ) and then (
-                        --                  -- Result of the previous rewrites
-                        --                  Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
-                        --                  B_Bis_J_Array (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
-                        --                  Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I) and
-                        --                  B_Bis_J_Plus_Mid_Array (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I)
-                        --              )
-                        --          )
-                        --      ));
-                        end loop;
-
-                        pragma Assume (for all I_Dex in 0 .. Mid_Dex - 1 => ((
-                            -- Arrays Definition
-                            B_Bis_J_Array (I_Dex)'Initialized and
-                            B_Bis_J_Plus_Mid_Array (I_Dex)'Initialized) and then (( 
-                                B_Bis_J_Array (I_Dex) = Psi ** (2 * To_Big (J_Dex) + 1) * Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex) and
-                                B_Bis_J_Plus_Mid_Array (I_Dex) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex) 
-                                ) and then (
-                                    -- Result of the previous rewrites
-                                    Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
-                                    B_Bis_J_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
-                                    Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex) and
-                                    B_Bis_J_Plus_Mid_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
-                                )
-                            )
-                        ));
-                        pragma Assert (B_Bis_J_Array'Initialized);
-                        pragma Assert (B_Bis_J_Plus_Mid_Array'Initialized);
-
-                        -- For J_Dex, just copy paste what is for J_Dex + Mid_Dex, and replace all occurences of J_Dex + Mid_Dex by J_Dex, - Psi by Psi, B_Bis_J_Plus_Mid_Array by B_Bis_J_Array.
-
-                        begin -- For J_Dex + Mid_Dex
-                            begin
-                                pragma Assert (NTT_Recurs (E, Psi) (J_Dex + Mid_Dex) = NTT_Recurs (E_Even, Psi_Square) (J_Dex) + (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex));
-                                begin -- For the even terms
-                                    begin
-                                        pragma Assert (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'First = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))'First);
-                                        pragma Assert (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'Length = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))'Length);
-                                        pragma Assert (for all I_Dex in Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'Range => (
-                                            Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
-                                        ));
-                                        pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
-                                    end;
-                                    pragma Assert (By (
-                                        Generic_Sum.Sum (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)) = Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))),
-                                        Generic_Sum.Lemma_Sum_Extensional (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) , Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
-                                    ));
-                                    pragma Assert (NTT_Ref (E_Even, Psi_Square) (J_Dex) = Generic_Sum.Sum (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)));
-                                    pragma Assert (By (
-                                        NTT_Recurs (E_Even, Psi_Square) (J_Dex) = NTT_Ref (E_Even, Psi_Square) (J_Dex),
-                                        Lemma_Recurs_Equiv_Ref (E_Even, Psi_Square)
-                                    ));
-                                    pragma Assert_And_Cut (NTT_Recurs (E_Even, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
-                                end;
-                                begin -- For the odd terms
-                                    begin -- One one side Sum of B_Bis_J_Plus_Mid_Array equals ... 
-                                        begin
-                                            pragma Assert (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)'First = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'First);
-                                            pragma Assert (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)'Length = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'Length);
-                                            pragma Assert (for all I_Dex in B_Bis_J_Plus_Mid_Array'Range => (
-                                                B_Bis_J_Plus_Mid_Array (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
-                                            ));
-                                            pragma Assert_And_Cut (B_Bis_J_Plus_Mid_Array = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
-                                        end;
-                                        pragma Assert (By (
-                                            Generic_Sum.Sum (B_Bis_J_Plus_Mid_Array) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))),
-                                            Generic_Sum.Lemma_Sum_Extensional (B_Bis_J_Plus_Mid_Array, Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
-                                        ));
-                                        pragma Assert_And_Cut (Generic_Sum.Sum (B_Bis_J_Plus_Mid_Array) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
-                                    end;
-                                    begin -- One the other side Sum of B_Bis_J_Plus_Mid_Array equals ... , 
-                                        begin
-                                            pragma Assert (for all I_Dex in B_Bis_J_Plus_Mid_Array'Range => (B_Bis_J_Array (I_Dex) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex)));
-                                            pragma Assert_And_Cut (By (
-                                                Generic_Sum.Sum (B_Bis_J_Plus_Mid_Array) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * Generic_Sum.Sum (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)),
-                                                Generic_Sum.Lemma_Sum_Linear_Scal_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex), B_Bis_J_Plus_Mid_Array)
-                                            ));
-                                        end;
-                                        pragma Assert (Generic_Sum.Sum (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) = NTT_Ref (E_Odd, Psi_Square) (J_Dex));
-                                        pragma Assert (Generic_Sum.Sum (B_Bis_J_Plus_Mid_Array) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Ref (E_Odd, Psi_Square) (J_Dex));
-                                        pragma Assert (By (NTT_Recurs (E_Odd, Psi_Square) (J_Dex) = NTT_Ref (E_Odd, Psi_Square) (J_Dex), Lemma_Recurs_Equiv_Ref (E_Odd, Psi_Square)));
-                                        pragma Assert_And_Cut (Generic_Sum.Sum (B_Bis_J_Plus_Mid_Array) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex));
-                                    end;
-                                    -- So ...
-                                    pragma Assert_And_Cut ((- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
-                                end;
-                                pragma Assert_And_Cut (
-                                    NTT_Recurs (E, Psi) (J_Dex + Mid_Dex) = 
-                                        Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))) + 
-                                        Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
-                                );
-                            end;
-                            pragma Assert (By (
-                                Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) = 
-                                        Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))) +
-                                        Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
-                                ,
-                                Generic_Sum.Lemma_Split_Odd_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))
-                            ));
-                            pragma Assert (NTT_Ref (E, Psi) (J_Dex + Mid_Dex) = Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
-                            pragma Assert_And_Cut (NTT_Ref (E, Psi) (J_Dex + Mid_Dex) = NTT_Recurs (E, Psi) (J_Dex + Mid_Dex));
+                    for I_Dex in 0 .. Mid_Dex - 1 loop
+                        begin
+                            rewrite1 (E, E_Even, Psi, Psi_Square, J_Dex, I_Dex, To_Big (J_Dex), To_Big (I_Dex));
+                            pragma Assert (NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex) (2 * I_Dex));
+                            pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex));
                         end;
+                        begin
+                            rewrite2 (E, E_Odd, Psi, Psi_Square, J_Dex, I_dex, To_Big (J_Dex), To_Big (I_Dex));
+                            pragma Assert (Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex) (2 * I_Dex + 1));
+                            pragma Assert_And_Cut (Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex));
+                        end;
+                        begin
+                            rewrite3 (E, E_Even, Psi, Psi_Square, Mid_Dex, J_Dex, I_Dex, To_Big (Mid_Dex), To_Big (J_Dex), To_Big (I_Dex));
+                            pragma Assert (NTT_Very_Inner_Ref (E_Even, Psi_Square, J_Dex, I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex));
+                            pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex));
+                        end;
+                        begin
+                            rewrite4 (E, E_Odd, Psi, Psi_Square, Mid_Dex, J_Dex, I_Dex, To_Big (Mid_Dex), To_Big (J_Dex), To_Big (I_Dex));
+                            pragma Assert ((- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex + Mid_Dex, 2 * I_Dex + 1));
+                            pragma Assert (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex + 1));
+                            pragma Assert (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex) (2 * I_Dex + 1));
+                            pragma Assert_And_Cut (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex));
+                        end;
+
+                        --  pragma Loop_Invariant (for all I in 0 .. I_Dex => (
+                        --      Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
+                        --      Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
+                        --      Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I) and
+                        --      Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I)
+                        --  ));
+                    end loop;
+
+                    pragma Assume (for all I_Dex in 0 .. Mid_Dex - 1 => (
+                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
+                        Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
+                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex) and
+                        Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
+                    ));
+
+                    -- For J_Dex, just copy paste what is for J_Dex + Mid_Dex, and replace all occurences of J_Dex + Mid_Dex by J_Dex, - Psi by Psi, Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) by Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)).
+
+                    begin -- For J_Dex + Mid_Dex
+                        begin
+                            pragma Assert (NTT_Recurs (E, Psi) (J_Dex + Mid_Dex) = NTT_Recurs (E_Even, Psi_Square) (J_Dex) + (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex));
+                            begin -- For the even terms
+                                begin
+                                    pragma Assert (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'First = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))'First);
+                                    pragma Assert (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'Length = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))'Length);
+                                    pragma Assert (for all I_Dex in Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)'Range => (
+                                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
+                                    ));
+                                    pragma Assert_And_Cut (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
+                                end;
+                                pragma Assert (By (
+                                    Generic_Sum.Sum (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)) = Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))),
+                                    Generic_Sum.Lemma_Sum_Extensional (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) , Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
+                                ));
+                                pragma Assert (NTT_Ref (E_Even, Psi_Square) (J_Dex) = Generic_Sum.Sum (Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex)));
+                                pragma Assert (By (
+                                    NTT_Recurs (E_Even, Psi_Square) (J_Dex) = NTT_Ref (E_Even, Psi_Square) (J_Dex),
+                                    Lemma_Recurs_Equiv_Ref (E_Even, Psi_Square)
+                                ));
+                                pragma Assert_And_Cut (NTT_Recurs (E_Even, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
+                            end;
+                            begin -- For the odd terms
+                                begin -- One one side Sum of Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) equals ... 
+                                    begin
+                                        pragma Assert (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)'First = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'First);
+                                        pragma Assert (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)'Length = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex))'Length);
+                                        pragma Assert (for all I_Dex in Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))'Range => (
+                                            Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
+                                        ));
+                                        pragma Assert_And_Cut (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
+                                    end;
+                                    pragma Assert (By (
+                                        Generic_Sum.Sum (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))),
+                                        Generic_Sum.Lemma_Sum_Extensional (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)), Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
+                                    ));
+                                    pragma Assert_And_Cut (Generic_Sum.Sum (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
+                                end;
+                                begin -- One the other side Sum of Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) equals ... , 
+                                    begin
+                                        pragma Assert (for all I_Dex in Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))'Range => (Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex)));
+                                        pragma Assert_And_Cut (By (
+                                            Generic_Sum.Sum (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * Generic_Sum.Sum (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)),
+                                            Generic_Sum.Lemma_Sum_Linear_Scal_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex), Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)))
+                                        ));
+                                    end;
+                                    pragma Assert (Generic_Sum.Sum (Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) = NTT_Ref (E_Odd, Psi_Square) (J_Dex));
+                                    pragma Assert (Generic_Sum.Sum (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Ref (E_Odd, Psi_Square) (J_Dex));
+                                    pragma Assert (By (NTT_Recurs (E_Odd, Psi_Square) (J_Dex) = NTT_Ref (E_Odd, Psi_Square) (J_Dex), Lemma_Recurs_Equiv_Ref (E_Odd, Psi_Square)));
+                                    pragma Assert_And_Cut (Generic_Sum.Sum (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex))) = (- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex));
+                                end;
+                                -- So ...
+                                pragma Assert_And_Cut ((- Psi ** (2 * To_Big (J_Dex) + 1)) * NTT_Recurs (E_Odd, Psi_Square) (J_Dex) = Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))));
+                            end;
+                            pragma Assert_And_Cut (
+                                NTT_Recurs (E, Psi) (J_Dex + Mid_Dex) = 
+                                    Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))) + 
+                                    Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
+                            );
+                        end;
+                        pragma Assert (By (
+                            Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) = 
+                                    Generic_Sum.Sum (Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))) +
+                                    Generic_Sum.Sum (Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)))
+                            ,
+                            Generic_Sum.Lemma_Split_Odd_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex))
+                        ));
+                        pragma Assert (NTT_Ref (E, Psi) (J_Dex + Mid_Dex) = Generic_Sum.Sum (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)));
+                        pragma Assert_And_Cut (NTT_Ref (E, Psi) (J_Dex + Mid_Dex) = NTT_Recurs (E, Psi) (J_Dex + Mid_Dex));
                     end;
-                    pragma Assert (for all J_Dex in 0 .. Mid_Dex - 1 => (
+                    pragma Loop_Invariant (for all J_Dex in 0 .. Mid_Dex - 1 => (
                         NTT_Recurs (E, Psi) (J_Dex) = NTT_Ref (E, Psi) (J_Dex) and 
                         NTT_Recurs (E, Psi) (J_Dex + Mid_Dex) = NTT_Ref (E, Psi) (J_Dex + Mid_Dex)
                     ));
                 end loop;
                 pragma Assert (NTT_Recurs (E, Psi) = NTT_Ref (E, Psi));
             end;
-
         end if;
         return True;
     end Lemma_Recurs_Equiv_Ref;
