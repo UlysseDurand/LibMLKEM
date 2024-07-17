@@ -170,15 +170,14 @@ library project MLKEM is
 
    package Prove is
       for Proof_Switches ("Ada") use (
-                                      "-j8",
+                                      "-j11",
                                       "--no-global-generation",
                                       "--no-inlining",
                                       "--no-loop-unrolling",
                                       "--level=2",
                                       "--prover=z3,cvc5,altergo",
-                                      "--timeout=30",
+                                      "--timeout=60",
                                       "--memlimit=0",
-                                      "--steps=25000",
                                       "--report=fail");
    end Prove;
 
