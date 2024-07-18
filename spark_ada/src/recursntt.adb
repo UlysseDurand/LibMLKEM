@@ -89,20 +89,14 @@ is
                             pragma Assert_And_Cut (Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex));
                         end;
 
-                        --  pragma Loop_Invariant (for all I in 0 .. I_Dex => (
-                        --      Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
-                        --      Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
-                        --      Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I) and
-                        --      Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I)
-                        --  ));
+                        pragma Assume (for all I in 0 .. I_Dex => (
+                            Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
+                            Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I) and
+                            Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I) and
+                            Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I)
+                        ));
                     end loop;
 
-                    pragma Assume (for all I_Dex in 0 .. Mid_Dex - 1 => (
-                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
-                        Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex) and
-                        Array_Generator_Very_Inner (E_Even, Psi_Square, J_Dex) (I_Dex) = Generic_Sum.Extract_Even (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex) and
-                        Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex + Mid_Dex)) (I_Dex)
-                    ));
 
                     -- For J_Dex, just copy paste what is for J_Dex + Mid_Dex, and replace all occurences of J_Dex + Mid_Dex by J_Dex, - Psi by Psi, Generic_Sum.Scalar_Mult (- Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex + Mid_Dex)) by Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)).
 
