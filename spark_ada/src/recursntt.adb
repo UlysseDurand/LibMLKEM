@@ -73,6 +73,8 @@ is
                         end;
                         begin
                             rewrite2 (E, E_Odd, Psi, Psi_Square, J_Dex, I_dex, To_Big (J_Dex), To_Big (I_Dex));
+                            pragma Assert (Psi ** (2 * To_Big (J_Dex) + 1) * NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex) = NTT_Very_Inner_Ref (E, Psi, J_Dex, 2 * I_Dex + 1));
+                            pragma Assert (NTT_Very_Inner_Ref (E_Odd, Psi_Square, J_Dex, I_Dex) = Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex) (I_Dex));
                             pragma Assert (Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Array_Generator_Very_Inner (E, Psi, J_Dex) (2 * I_Dex + 1));
                             pragma Assert_And_Cut (Generic_Sum.Scalar_Mult (Psi ** (2 * To_Big (J_Dex) + 1), Array_Generator_Very_Inner (E_Odd, Psi_Square, J_Dex)) (I_Dex) = Generic_Sum.Extract_Odd (Array_Generator_Very_Inner (E, Psi, J_Dex)) (I_Dex));
                         end;
