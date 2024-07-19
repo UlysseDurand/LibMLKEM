@@ -384,20 +384,44 @@ is
     end Lemma_Mult_Associative;
 
     function Lemma_Pow_Additive (X : T_Ref;
-                                 A : Big_Integer;
-                                 B : Big_Integer) return Boolean
+                                 A : Big_Natural;
+                                 B : Big_Natural) return Boolean
     is 
     begin
-        pragma Assume (X ** (A + B) = (X ** A) * (X ** B));
+        if B = 0 then
+            pragma Assert (X ** (A + B) = (X ** A) * (X ** B));
+        else
+            declare 
+                Induction_Hypothesis : Boolean := Lemma_Pow_Additive (X, A + 1, B - 1);
+            begin
+                pragma Assert (X ** (A + 1) * X ** (B - 1) = X ** (A + B));
+                pragma Assert (((X ** A) * X) * X ** (B - 1) = X ** (A + B));
+                pragma Assert (By (((X ** A) * X) * (X ** (B - 1)) = X ** A * (X * (X ** (B - 1))), Lemma_Mult_Associative (X ** A, X, X ** (B - 1))));
+            end;
+        end if;
         return True;
     end Lemma_Pow_Additive;
 
     function Lemma_Pow_Mult (X : T_ref;
-                             A : Big_Integer;
-                             B : Big_Integer) return Boolean
+                             A : Big_Natural;
+                             B : Big_Natural) return Boolean
     is
     begin
-        pragma Assume ((X ** A) ** B = X ** (A * B));
+        if B = 0 then
+            pragma Assert ((X ** A) ** B = X ** (A * B));
+        else
+            declare
+                pragma Assert (B - 1 in Big_Natural);
+                Induction_Hypothesis : Boolean := Lemma_Pow_Mult (X, A, B - 1);
+            begin
+                pragma Assert (A * (B - 1) in Big_Natural);
+                pragma Assert ((X ** A) ** (B - 1) = X ** (A * (B - 1)));
+                pragma Assert ((X ** A) ** (B - 1) * (X ** A) = X ** (A * (B - 1)) * (X ** A));
+                pragma Assert (By (X ** (A * (B - 1)) * (X ** A) = X ** (A * (B - 1) + A), Lemma_Pow_Additive (X, A * (B - 1), A)));
+                pragma Assert ((X ** A) ** (B - 1) * (X ** A) = X ** (A * B));
+
+            end;
+        end if;
         return True;
     end Lemma_Pow_Mult;
 

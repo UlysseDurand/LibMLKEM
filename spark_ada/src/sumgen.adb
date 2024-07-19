@@ -65,6 +65,15 @@ is
                                         B : ElementType) return Boolean
         is (True);
 
+        function Lemma_Mult_Add_Distributive (A : ElementType;
+                                              B : ElementType;
+                                              C : ElementType) return Boolean
+        is 
+        begin
+            pragma Assume (A * (B + C) = A * B + A * C);
+            return True;
+        end;
+
         function Extract_Even (F : ArrayType) return ArrayType
         is 
             Res : ArrayType (0 .. IndexRange (F'Length / 2 - 1)) with Relaxed_Initialization;
@@ -214,7 +223,22 @@ is
                                              C : ArrayType) return Boolean
         is
         begin
-            pragma Assume (Sum (C) = A * (Sum (B))); 
+            if B'Length = 0 then
+                pragma Assert (Sum (C) = A * (Sum (B))); 
+            else
+                declare
+                    Induction_Hypothesis : Boolean := Lemma_Sum_Linear_Scal_Mult (A, Cut_Last (B), Cut_Last (C));
+                begin
+                    pragma Assert (Sum (Cut_Last (C)) = A * Sum (Cut_Last (B)));
+                    pragma Assert (C (C'Last) = A * B (B'Last));
+                    pragma Assert (Sum (B) = Sum (Cut_Last (B)) + B (B'Last));
+                    pragma Assert (Sum (C) = Sum (Cut_Last (C)) + C (C'Last));
+                    pragma Assert (Sum (C) = A  * Sum (Cut_Last (B)) + C (C'Last));
+                    pragma Assert (Sum (C) = A  * Sum (Cut_Last (B)) + A * B (B'Last));
+                    pragma Assert (By (Sum (C) = A  * (Sum (Cut_Last (B)) + B (B'Last)), Lemma_Mult_Add_Distributive (A, Sum (Cut_Last (B)), B (B'Last))));
+                    pragma Assert (Sum (C) = A * Sum (B));
+                end;
+            end if;
             return True;
         end Lemma_Sum_Linear_Scal_Mult;
 

@@ -117,17 +117,19 @@ is
                      (X * Y) * Z = X * (Y * Z);
 
     function Lemma_Pow_Additive (X : T_Ref;
-                                 A : Big_Integer;
-                                 B : Big_Integer) return Boolean
-        with Pre => A >=0 and B >= 0,
-             Post => Lemma_Pow_Additive'Result and
-                     (X ** A) * (X ** B) = X ** (A + B);
+                                 A : Big_Natural;
+                                 B : Big_Natural) return Boolean
+        with Post => Lemma_Pow_Additive'Result and
+                     (X ** A) * (X ** B) = X ** (A + B),
+             Subprogram_Variant => (Decreases => B),
+             Annotate => (GNATprove, Always_Return);
 
     function Lemma_Pow_Mult (X : T_ref;
-                             A : Big_Integer;
-                             B : Big_Integer) return Boolean
-        with Pre => A >= 0 and B >= 0,
-             Post => Lemma_Pow_Mult'Result and
-                     ((X ** A) ** B = X ** (A * B));
+                             A : Big_Natural;
+                             B : Big_Natural) return Boolean
+        with Post => Lemma_Pow_Mult'Result and
+                     ((X ** A) ** B = X ** (A * B)),
+             Subprogram_Variant => (Decreases => B),
+             Annotate => (GNATprove, Always_Return);
 
 end RecursNTT;

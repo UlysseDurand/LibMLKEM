@@ -1,4 +1,5 @@
 pragma Extensions_Allowed (On);
+with SPARK.Big_Integers; use SPARK.Big_Integers;
 
 package SumGen
     with SPARK_Mode => On 
@@ -51,6 +52,12 @@ is
             with Post => Lemma_Add_Commutative'Result and
                          A + B = B + A;
 
+        function Lemma_Mult_Add_Distributive (A : ElementType;
+                                              B : ElementType;
+                                              C : ElementType) return Boolean
+            with Post => Lemma_Mult_Add_Distributive'Result and
+                         A * (B + C) = A * B + A * C;
+
         function Extract_Even (F : ArrayType) return ArrayType
             with Pre => F'First = 0 and F'Length mod 2 = 0 and F'Length > 1,
                  Post => Extract_Even'Result'First = 0 and Extract_Even'Result'Length = F'Length / 2 and 
@@ -87,10 +94,12 @@ is
         function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
                                              B : ArrayType;
                                              C : ArrayType) return Boolean
-            with Pre => B'First = C'First and B'Last = C'Last and ( 
+            with Pre => (B'First = C'First and B'Last = C'Last) and then ( 
                         for all I in B'Range => (C (I) = A * B(I))),
                 Post => Lemma_Sum_Linear_Scal_Mult'Result and
-                        Sum (C) = A * Sum (B);
+                        Sum (C) = A * Sum (B),
+                Subprogram_Variant => (Decreases => B'Length),
+                Annotate => (GNATprove, Always_Return);
 
         generic
             with function Func (Param1 : ArrayType;
