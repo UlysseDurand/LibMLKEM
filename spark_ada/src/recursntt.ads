@@ -8,6 +8,26 @@ package RecursNTT
     with SPARK_Mode => On
 is
 
+    function Square (E : Array_Zq ; Psi : T_Ref) return T_Ref
+        with Pre => Psi ** (To_Big_Integer (E'Length)) = - 1,
+            Post => Square'Result = Psi ** (To_Big_Integer (2)) and
+                    Square'Result ** (To_Big_Integer (E'Length / 2)) = -1;
+
+   function Val_Small (E : Array_Zq; Psi : T_Ref; J_Dex : Index_Ref) return T_Ref 
+        with Pre => (E'Length > 1 and then Is_Pow_Of_Two (E'Length / 2)) and then
+                    (Psi ** To_Big_Integer (E'Length) = - 1 and
+                    (E'First = 0 and E'Last >= E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then  
+                    (Is_Pow_Of_Two (E'Length)) and then J_Dex in 0 .. Index_Ref (E'Length / 2) - 1,
+             Subprogram_Variant => (Decreases => E'Length, Increases => 1);
+
+   function Val_Big (E : Array_Zq; Psi : T_Ref; J_Dex : Index_Ref) return T_Ref 
+        with Pre => (E'Length > 1 and then Is_Pow_Of_Two (E'Length / 2)) and then
+                    (Psi ** To_Big_Integer (E'Length) = - 1 and
+                    (E'First = 0 and E'Last >= E'First and E'Length <= Integer (Index_Ref'Last + 1))) and then  
+                    (Is_Pow_Of_Two (E'Length)) and then J_Dex in Index_Ref (E'Length / 2) .. E'Length - 1,
+             Subprogram_Variant => (Decreases => E'Length, Increases => 1);
+      
+
     --  This function is meant to be recursive
     function NTT_Recurs (E : Array_Zq;
                          Psi : T_Ref) return Array_Zq
@@ -19,21 +39,21 @@ is
                         NTT_Recurs'Result (0) = E (0) 
                      else 
                         (for all J_Dex in 0 .. Index_Ref (E'Length / 2) - 1 => (
-                            NTT_Recurs'Result (J_Dex) = 
-                                NTT_Recurs (Generic_Sum.Extract_Even (E), Square (E, Psi)) (J_Dex) + 
-                                Psi ** (2 * To_Big (J_Dex)) * NTT_Recurs (Generic_Sum.Extract_Odd (E), Square (E, Psi)) (J_Dex) and
-                            NTT_Recurs'Result (J_Dex + Index_Ref (E'Length / 2)) = 
-                                NTT_Recurs (Generic_Sum.Extract_Even (E), Square (E, Psi)) (J_Dex) - 
-                                Psi ** (2 * To_Big (J_Dex)) * NTT_Recurs (Generic_Sum.Extract_Odd (E), Square (E, Psi)) (J_Dex)
+                            NTT_Recurs'Result (J_Dex) = Val_Small (E, Psi, J_Dex))) and
+                        (for all J_Dex in Index_Ref (E'Length / 2) .. E'Length - 1 => (
+                            NTT_Recurs'Result (J_Dex) = Val_Big (E, Psi, J_Dex)
                         ))
                      ),
-             Subprogram_Variant => (Decreases => E'Length),
+             Subprogram_Variant => (Decreases => E'Length, Increases => 0),
              Annotate => (GNATprove, Always_Return);
 
-    function Square (E : Array_Zq ; Psi : T_Ref) return T_Ref
-        with Pre => Psi ** (To_Big_Integer (E'Length)) = - 1,
-            Post => Square'Result = Psi ** (To_Big_Integer (2)) and
-                    Square'Result ** (To_Big_Integer (E'Length / 2)) = -1;
+   function Val_Small (E : Array_Zq; Psi : T_Ref; J_Dex : Index_Ref) return T_Ref is
+     (NTT_Recurs (Generic_Sum.Extract_Even (E), Square (E, Psi)) (J_Dex) + 
+          Psi ** (2 * To_Big (J_Dex) + 1) * NTT_Recurs (Generic_Sum.Extract_Odd (E), Square (E, Psi)) (J_Dex));
+
+   function Val_Big (E : Array_Zq; Psi : T_Ref; J_Dex : Index_Ref) return T_Ref is
+     (NTT_Recurs (Generic_Sum.Extract_Even (E), Square (E, Psi)) (J_Dex - Index_Ref (E'Length / 2)) + (- 
+        Psi ** (2 * To_Big (J_Dex - Index_Ref (E'Length / 2)) + 1)) * NTT_Recurs (Generic_Sum.Extract_Odd (E), Square (E, Psi)) (J_Dex - Index_Ref (E'Length / 2)));
 
     function Square (E : Array_Zq ; Psi : T_Ref) return T_Ref
     is 

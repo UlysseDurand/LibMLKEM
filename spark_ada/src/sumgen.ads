@@ -6,11 +6,15 @@ is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
         with Pre => A >= 1,
-             Post => Is_Pow_Of_Two'Result = ((A = 1) or (A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)))),
+             Post => (if Is_Pow_Of_Two'Result then (A = 1) or (A mod 2 = 0)),
              Subprogram_Variant =>  (Decreases => A), 
              Annotate => (GNATprove, Always_Return);
 
-    
+    function Lemma_Is_Pow_Of_Two_Def (A : Positive) return Boolean
+        with Pre => Is_Pow_Of_Two (A) and A > 1,
+             Post => Lemma_Is_Pow_Of_Two_Def'Result and Is_Pow_Of_Two (A / 2), 
+             Annotate => (GNATprove, Always_Return);
+
     generic 
         type ElementType is mod <>;
         type IndexRange is range <>;
@@ -87,7 +91,7 @@ is
         function Lemma_Sum_Linear_Scal_Mult (A : ElementType;
                                              B : ArrayType;
                                              C : ArrayType) return Boolean
-            with Pre => B'First = C'First and B'Last = C'Last and ( 
+            with Pre => B'First = C'First and then B'Last = C'Last and then ( 
                         for all I in B'Range => (C (I) = A * B(I))),
                 Post => Lemma_Sum_Linear_Scal_Mult'Result and
                         Sum (C) = A * Sum (B);
