@@ -25,7 +25,7 @@ proverecursmain:
 	gnatprove -Pmlkem --limit-subp=recursntt.adb:11 --counterexamples=off --info
 
 proverecursequiv:
-	gnatprove -Pmlkem --limit-subp=recursntt.adb:47 --counterexamples=off --info
+	gnatprove -Pmlkem --limit-subp=recursntt.adb:200 --counterexamples=off --info
 
 
 proveref:

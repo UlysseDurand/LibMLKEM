@@ -30,13 +30,12 @@ is
 
         function "**" (A : T_Ref;
                        B : Big_Natural) return T_Ref
-            with Post => "**"'Result = (if B = 0 then 1 else A * (A ** (B - 1))),
+            with Post => (if B = 0 then "**"'Result = 1),
                  Subprogram_Variant => (Decreases => B);
 
-        function "**" (A : T_Ref ;
-                       B : Big_Natural) return T_Ref
-        is
-            (if B = 0 then 1 else A * (A ** (B - 1)));
+        function Lemma_Pow_Def (A : T_Ref;
+                                B : Big_Natural) return Boolean
+            with Post => Lemma_Pow_Def'Result and (if B > 0 then A ** B = A * (A ** (B - 1)));
 
     end ZqRef;
 

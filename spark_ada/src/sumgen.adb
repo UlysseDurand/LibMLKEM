@@ -6,18 +6,9 @@ package body SumGen
 is
 
     function Is_Pow_Of_Two (A : Positive) return Boolean
-    is
-        Res : Boolean;
-    begin
-        if A = 1 then
-            Res := True;
-        else
-            pragma Assert (A / 2 >= 1);
-            Res := A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2));
-        end if;
-        pragma Assert (Res = (A = 1 or (A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2)))));
-        return Res;
-    end Is_Pow_Of_Two;
+    is ((A = 1) or (A > 1 and then (A mod 2 = 0 and Is_Pow_Of_Two (A / 2))));
+
+    function Lemma_Is_Pow_Of_Two_Def (A : Positive) return Boolean is (True);
 
     package body Sum_On_Array is 
 
